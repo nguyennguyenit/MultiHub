@@ -52,50 +52,82 @@ func main() {
 - Startup/shutdown lifecycle hooks
 - `app` struct auto-bound as IPC endpoint
 
-### 2. App Struct & IPC Bindings
+### Wails Events (Phase 03)
+
+| Event Name | Payload | Triggered By | Purpose |
+|-----------|---------|--------------|---------|
+| `terminal:created` | `types.Terminal` metadata | `Manager.Create()` | Notify frontend of new terminal spawn |
+| `terminal:exit` | `{terminalId, exitCode}` | `Manager.handleExit()` | Signal terminal process exit |
+| `terminal:title-change` | `{terminalId, title}` | `Manager.handleOutput()` via OSC parser | Update terminal title from escape sequences |
+| `terminal:state-change` | `{terminalId, isClaudeMode}` | `Manager.InvokeClaudeCode()` | Notify Claude mode activation |
+| `terminal:agent-detected` | `{terminalId, agentType}` | `Manager.Write()` on agent CLI detection | Track AI agent type (Claude/Codex/Gemini/Aider) |
+| `pty:output:{id}` | string (terminal output) | `PTYProcess.readLoop()` | Stream PTY output (Phase 02 legacy) |
+| `pty:exit:{id}` | string (exit code) | `PTYProcess.readLoop()` (Phase 02 legacy) | PTY exit signal (Phase 02 legacy) |
+| `system:terminal-resumed` | string (terminal ID) | `Manager.HandleResume()` | System wake from suspend; resume PTY |
+
+### 2. App Struct & IPC Bindings (Phase 03)
 
 **File:** `app.go`
 
 ```go
 type App struct {
-    ctx context.Context           // Wails app context for IPC
-    terminal *terminal.Manager    // PTY manager instance
+    ctx         context.Context
+    terminalMgr *terminal.Manager    // PTY manager instance
 }
-
-// IPC Methods (exported, callable from JS)
-func (a *App) PtyCreate(id, shell, cwd string) error
-func (a *App) PtyWrite(id, data string) error
-func (a *App) PtyResize(id string, cols, rows int) error
-func (a *App) PtyDestroy(id string) error
-func (a *App) PtyLatencyTest(id string) string
-func (a *App) PtyActiveCount() int
 ```
+
+**Terminal Management Bindings (Phase 03):**
+- `TerminalCreate(opts)` → spawn with options (shell, cwd, projectId, title)
+- `TerminalWrite(id, data)` → send keyboard input (with agent detection)
+- `TerminalResize(id, cols, rows)` → update window dimensions
+- `TerminalDestroy(id)` → async close
+- `TerminalList()` → all active terminals
+- `TerminalGet(id)` → single terminal metadata
+- `TerminalGetSessions()` → snapshot for persistence
+- `TerminalGetExitedSession(id)` → retrieve ghost-cached session
+- `TerminalInvokeClaude(id, sessionID)` → start Claude agent
+- `TerminalFindByClaudeSession(sessionID)` → resolve terminal by Claude ID
+- `TerminalCount()` → active terminal count
+
+**Legacy PTY Bindings (Phase 02 compat):**
+- `PtyCreate(id, shell, cwd)` → maps to TerminalCreate by title
+- `PtyWrite/Resize/Destroy/LatencyTest/PtyActiveCount` → backward compatible
 
 **Lifecycle:**
 - `startup()`: Initializes `terminal.Manager` with Wails context
 - `shutdown()`: Calls `DestroyAll()` on all active PTY processes
 
-### 3. Terminal Manager
+### 3. Terminal Manager (Phase 03)
 
 **File:** `internal/terminal/manager.go`
 
 ```go
 type Manager struct {
-    mu sync.RWMutex                    // Guards processes map
-    processes map[string]*PTYProcess   // id → PTYProcess
-    appCtx context.Context             // Wails context for event emission
+    mu              sync.RWMutex
+    appCtx          context.Context
+    terminals       map[string]*PTYProcess
+    titleIndex      map[string]string  // title → UUID (Phase 03)
+    exitedTerminals map[string]ghostEntry // ghost cache (Phase 03)
+    systemSuspended bool
 }
 ```
 
-**Methods:**
-- `Spawn(id, shell, cwd)` → creates and registers PTYProcess
-- `Write(id, data)` → routes keyboard input
-- `Resize(id, cols, rows)` → updates terminal dimensions
-- `Destroy(id)` → gracefully closes and removes
-- `DestroyAll()` → cleanup on app shutdown
-- `Count()` → active process count (for monitoring)
+**Core Methods:**
+- `Create(opts)` → spawns terminal with metadata, emits `terminal:created` event
+- `Write(id, data)` → routes input with agent detection
+- `Resize(id, cols, rows)` → updates PTY dimensions
+- `Destroy(id)` / `DestroyAsync(id)` → graceful close
+- `DestroyAll()` → shutdown cleanup
+- `Count()` → active count
 
-**Concurrency:** RWMutex protects process map; safe for concurrent Spawn/Destroy/Write operations.
+**Phase 03 Features:**
+- **Ghost Cache:** Retains up to 50 exited sessions for 30min (recovery capability)
+- **Agent Detection:** Keystroke-based detection of Claude/Codex/Gemini/Aider commands
+- **Title Indexing:** Maps terminal titles to UUIDs for backward compatibility
+- **Suspend/Resume:** `HandleSuspend()` / `HandleResume()` prevent PTY writes during system sleep
+- **Claude Integration:** `InvokeClaudeCode(id, sessionID)` launches agent, `FindByClaudeSessionID()` resolves terminal
+
+**Concurrency:** RWMutex on terminal map; PTYProcess has internal mutex for metadata/state; safe for concurrent access.
 
 ### 4. PTY Process Implementation
 
@@ -144,6 +176,12 @@ type PTYProcess struct {
 4. Wait 3 seconds for graceful exit
 5. Send SIGKILL if timeout
 6. Close ptmx file descriptor
+
+**Phase 03 Additions:**
+- **Agent Detection** (`agent_detection.go`): `ProcessInputForAgentDetection()` watches input buffer for Claude/Codex/Gemini/Aider CLI binaries; returns AgentType when command line is recognized
+- **OSC Parsing** (`osc_parser.go`): `ParseOscTitle()` extracts terminal title from OSC 0/1/2 escape sequences; maintains sliding buffer to handle sequences split across read chunks
+- **Shell Resolver** (`shell_resolver.go`): `ResolveDefaultShell()` detects user login shell via dscl (macOS) → $SHELL env → /bin/bash fallback
+- **Session Snapshots** (`Snapshot()`): `TerminalSession` captures metadata + state for persistence/recovery
 
 ## Frontend Architecture
 
@@ -339,6 +377,6 @@ Rendered Terminal
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Last Updated:** 2026-04-09  
-**Architecture Review:** Phases 01 + 02 complete
+**Architecture Review:** Phases 01 + 02 + 03 complete
