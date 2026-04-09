@@ -1,7 +1,7 @@
 ---
 phase: "03"
 title: "Terminal Management Backend"
-status: pending
+status: completed
 effort: 12h
 risk: Medium
 depends_on: ["02"]
@@ -10,7 +10,7 @@ depends_on: ["02"]
 # Phase 03: Terminal Management Backend
 
 **Priority:** P1 -- Core functionality
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/terminal/terminal-manager.ts` (610 lines)
@@ -282,25 +282,25 @@ func (a *App) TerminalInvokeClaude(id string, sessionID string) bool {
 
 ## Todo List
 
-- [ ] Enhance PTYProcess with metadata and buffer fields
-- [ ] Create Manager struct with sync.RWMutex
-- [ ] Port shell detection (platform-specific)
-- [ ] Port Create() with PTY spawn and event wiring
-- [ ] Port Write() with agent detection + suspend guard
-- [ ] Port Resize() with suspend guard
-- [ ] Port DestroyAsync() with graceful exit + force kill fallback
-- [ ] Port OSC title parser
-- [ ] Port agent detection logic
-- [ ] Port ghost cache (50 max, 30min TTL)
-- [ ] Port suspend/resume handling
-- [ ] Port InvokeClaudeCode() and session ID tracking
-- [ ] Port attachClaudeSession() and findByClaudeSessionId()
-- [ ] Wire Manager events to Wails EventsEmit
-- [ ] Add Wails binding methods to App struct
-- [ ] Unit tests: agent detection
-- [ ] Unit tests: OSC title parsing
-- [ ] Unit tests: ghost cache eviction
-- [ ] Integration test: full create->write->output->destroy cycle
+- [x] Enhance PTYProcess with metadata and buffer fields
+- [x] Create Manager struct with sync.RWMutex
+- [x] Port shell detection (platform-specific)
+- [x] Port Create() with PTY spawn and event wiring
+- [x] Port Write() with agent detection + suspend guard
+- [x] Port Resize() with suspend guard
+- [x] Port DestroyAsync() with graceful exit + force kill fallback
+- [x] Port OSC title parser
+- [x] Port agent detection logic
+- [x] Port ghost cache (50 max, 30min TTL)
+- [x] Port suspend/resume handling
+- [x] Port InvokeClaudeCode() and session ID tracking
+- [x] Port attachClaudeSession() and findByClaudeSessionId()
+- [x] Wire Manager events to Wails EventsEmit
+- [x] Add Wails binding methods to App struct
+- [x] Unit tests: agent detection
+- [x] Unit tests: OSC title parsing
+- [x] Unit tests: ghost cache eviction
+- [x] Integration test: full create->write->output->destroy cycle
 
 ## Success Criteria
 

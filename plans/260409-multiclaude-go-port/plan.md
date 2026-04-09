@@ -33,7 +33,7 @@ IPC Migration: 86 Electron IPC channels --> ~45 Wails bound methods + ~12 event 
 |---|-------|--------|--------|------|------|
 | 01 | [Project Scaffolding](phase-01-project-scaffolding.md) | 4h | completed | -- | Low |
 | 02 | [PTY Prototype](phase-02-pty-prototype.md) | 8h | completed | 01 | **HIGH** |
-| 03 | [Terminal Management](phase-03-terminal-management.md) | 12h | pending | 02 | Med |
+| 03 | [Terminal Management](phase-03-terminal-management.md) | 12h | completed | 02 | Med |
 | 04 | [Frontend Migration](phase-04-frontend-migration.md) | 20h | pending | 03 | Med |
 | 05 | [Project Management](phase-05-project-management.md) | 6h | pending | 01 | Low |
 | 06 | [Git Integration](phase-06-git-integration.md) | 16h | pending | 05 | Med |
