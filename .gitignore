@@ -1,0 +1,26 @@
+# Go
+build/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Wails
+frontend/dist/
+frontend/node_modules/
+frontend/wailsjs/
+
+# macOS
+.DS_Store
+*.dmg
+*.pkg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.*

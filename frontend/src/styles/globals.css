@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* ── MultiHub Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Background layers */
+  --color-bg-primary:    #0d1117;
+  --color-bg-secondary:  #161b22;
+  --color-bg-tertiary:   #1c2128;
+  --color-bg-hover:      #21262d;
+  --color-bg-active:     #2d333b;
+
+  /* Borders */
+  --color-border-default: #30363d;
+  --color-border-muted:   #21262d;
+  --color-border-subtle:  #1c2128;
+
+  /* Text */
+  --color-text-primary:   #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted:     #6e7681;
+  --color-text-link:      #58a6ff;
+
+  /* Accent */
+  --color-accent-primary:   #1f6feb;
+  --color-accent-secondary: #388bfd;
+  --color-accent-emphasis:  #58a6ff;
+
+  /* Status */
+  --color-success:  #3fb950;
+  --color-warning:  #d29922;
+  --color-danger:   #f85149;
+  --color-info:     #58a6ff;
+
+  /* Agent type colors */
+  --color-agent-claude:  #cc785c;
+  --color-agent-codex:   #5fa88a;
+  --color-agent-gemini:  #4285f4;
+  --color-agent-aider:   #9c6ade;
+  --color-agent-generic: #8b949e;
+
+  /* Terminal */
+  --color-terminal-bg:         #0d1117;
+  --color-terminal-foreground: #e6edf3;
+  --color-terminal-cursor:     #58a6ff;
+  --color-terminal-selection:  rgba(88, 166, 255, 0.2);
+
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+
+  /* Spacing */
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+
+  /* Transitions */
+  --transition-fast:   80ms ease;
+  --transition-normal: 150ms ease;
+}
+
+/* ── Base Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent text selection on UI chrome */
+  user-select: none;
+}
+
+/* Allow text selection inside terminals and inputs */
+input, textarea, [data-selectable] {
+  user-select: text;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-default);
+}
