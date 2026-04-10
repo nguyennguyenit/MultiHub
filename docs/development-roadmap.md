@@ -72,7 +72,9 @@ MultiHub is a desktop workspace application for running AI coding agents in para
 
 ### UI/UX Workbench Redesign
 - [x] Shell header, project switcher, terminal actions, panels, welcome state, and update surfaces refreshed. GitHub side panel rebuilt as a wider tabbed repo cockpit with summary shell, Changes/History/GitHub tabs, contextual commit composer, and stable selectors.
-- Verified: Vitest 26/26; frontend build pass; Playwright targeted smoke 5/5 against `wails dev`.
+- [x] Terminal workspace now stays visible for existing terminals even when no project is currently selected.
+- [x] Settings toggles no longer trigger React setState-in-render warnings, and empty-state terminal actions no longer send cyclic click events through Wails IPC.
+- Verified: Vitest 30/30; frontend build pass; Playwright targeted smoke 5/5 against `wails dev`.
 - Docs impact: minor.
 
 ## Critical Path
@@ -123,7 +125,7 @@ git push origin v1.0.1
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
 | All Go tests pass (-race) | 100% | 100% | ✅ |
-| Frontend unit tests pass | 100% | 100% (17/17) | ✅ |
+| Frontend unit tests pass | 100% | 100% (30/30) | ✅ |
 | E2E tests pass (all platforms) | 100% | 100% | ✅ |
 | Startup time | <3s | <2s | ✅ |
 | Idle memory | <200MB | ~150MB | ✅ |
