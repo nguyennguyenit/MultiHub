@@ -95,7 +95,7 @@ All 11 phases of the Electron-to-Go port are complete. MultiHub is now a single 
 
 **Test Coverage:**
 - Go: `go test -race ./internal/... ./pkg/...` — all passing
-- Frontend: Vitest 11/11 tests passing
+- Frontend: Vitest 17/17 tests passing
 - E2E: Playwright suite covering core workflows
 - Cross-platform: macOS, Linux, Windows verified
 
@@ -158,6 +158,12 @@ All 11 phases of the Electron-to-Go port are complete. MultiHub is now a single 
 - Code standards in [code-standards.md](./code-standards.md)
 - Implementation phases in [Phase Plans](../plans/260409-multiclaude-go-port/)
 - Codebase overview in [codebase-summary.md](./codebase-summary.md)
+
+### 🎨 UI/UX Workbench Redesign
+- Refreshed the shell header, project switcher, terminal actions, panels, welcome state, and update surfaces, and redesigned the GitHub side panel into a wider tabbed repo cockpit with summary shell, Changes/History/GitHub tabs, contextual commit composer, and a GitHub-specific `460px` width variant.
+- Added stable selectors and targeted regression coverage for the new panel flow.
+- Verified: Vitest 26/26; frontend build pass; Playwright targeted smoke 5/5 against `wails dev`.
+- Docs impact: minor; roadmap/changelog updated.
 
 ### ⏭️ Known Limitations
 

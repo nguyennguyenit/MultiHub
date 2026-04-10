@@ -61,7 +61,7 @@ MultiHub is a desktop workspace application for running AI coding agents in para
 
 ### Testing & Quality
 - [x] Go unit tests (all packages, `-race` flag)
-- [x] Frontend Vitest unit tests (11 passing)
+- [x] Frontend Vitest unit tests (17 passing)
 - [x] E2E Playwright tests (terminal, projects, settings)
 - [x] Performance benchmarks:
   - Startup time: <2s
@@ -69,6 +69,11 @@ MultiHub is a desktop workspace application for running AI coding agents in para
   - Binary size: ~45MB
 - [x] Cross-platform testing (macOS, Linux, Windows)
 - [x] Theme rendering validation
+
+### UI/UX Workbench Redesign
+- [x] Shell header, project switcher, terminal actions, panels, welcome state, and update surfaces refreshed. GitHub side panel rebuilt as a wider tabbed repo cockpit with summary shell, Changes/History/GitHub tabs, contextual commit composer, and stable selectors.
+- Verified: Vitest 26/26; frontend build pass; Playwright targeted smoke 5/5 against `wails dev`.
+- Docs impact: minor.
 
 ## Critical Path
 
@@ -118,7 +123,7 @@ git push origin v1.0.1
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
 | All Go tests pass (-race) | 100% | 100% | ✅ |
-| Frontend unit tests pass | 100% | 100% (11/11) | ✅ |
+| Frontend unit tests pass | 100% | 100% (17/17) | ✅ |
 | E2E tests pass (all platforms) | 100% | 100% | ✅ |
 | Startup time | <3s | <2s | ✅ |
 | Idle memory | <200MB | ~150MB | ✅ |
