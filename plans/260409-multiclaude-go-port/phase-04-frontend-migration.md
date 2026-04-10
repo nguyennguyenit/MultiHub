@@ -1,7 +1,7 @@
 ---
 phase: "04"
 title: "Frontend Migration"
-status: pending
+status: completed
 effort: 20h
 risk: Medium
 depends_on: ["03"]
@@ -10,7 +10,7 @@ depends_on: ["03"]
 # Phase 04: Frontend Migration
 
 **Priority:** P1 -- Largest phase by volume
-**Status:** Pending
+**Status:** Completed (2026-04-10)
 
 ## Context Links
 - Source: `src/renderer/` (all components, hooks, stores, utils)
@@ -365,32 +365,32 @@ Wails auto-generates TypeScript types from Go structs. Any field name difference
 
 ## Todo List
 
-- [ ] Create `frontend/src/api/index.ts` adapter layer
-- [ ] Create `frontend/src/api/events.ts` event helpers
-- [ ] Copy all source renderer components to frontend/src/
-- [ ] Copy styles/globals.css with theme variables
-- [ ] Update stores: app-store.ts (terminal + project + session calls)
-- [ ] Update stores: settings-store.ts
-- [ ] Update stores: notification-store.ts
-- [ ] Update stores: update-store.ts
-- [ ] Update stores: image-store.ts
-- [ ] Update hooks: use-terminal.ts (critical -- xterm.js integration)
-- [ ] Update hooks: use-git-panel.ts
-- [ ] Update hooks: use-file-drop.ts
-- [ ] Update hooks: use-terminal-resize.ts
-- [ ] Update components: terminal/* (6 files)
-- [ ] Update components: git-panel/* (10 files)
-- [ ] Update components: github-setup/* (3 files)
-- [ ] Update components: github-view/* (8 files)
-- [ ] Update components: settings/* (8 files)
-- [ ] Update components: toolbar/* (5 files)
-- [ ] Update components: update-banner.tsx
-- [ ] Replace window.electron.app.openExternal with BrowserOpenURL
-- [ ] Replace folder picker with Wails dialog
-- [ ] Replace window controls with Wails runtime calls
-- [ ] Remove all window.electron type declarations
-- [ ] Verify: `grep -r "window.electron" frontend/src/` returns 0 matches
-- [ ] Verify: `wails dev` renders full UI without console errors
+- [x] Create `frontend/src/api/index.ts` adapter layer
+- [x] Create `frontend/src/api/events.ts` event helpers
+- [x] Copy all source renderer components to frontend/src/
+- [x] Copy styles/globals.css with theme variables
+- [x] Update stores: app-store.ts (terminal + project + session calls)
+- [x] Update stores: settings-store.ts
+- [x] Update stores: notification-store.ts
+- [x] Update stores: update-store.ts
+- [x] Update stores: image-store.ts
+- [x] Update hooks: use-terminal.ts (critical -- xterm.js integration)
+- [x] Update hooks: use-git-panel.ts
+- [x] Update hooks: use-file-drop.ts
+- [x] Update hooks: use-terminal-resize.ts
+- [x] Update components: terminal/* (6 files)
+- [x] Update components: git-panel/* (10 files)
+- [x] Update components: github-setup/* (3 files)
+- [x] Update components: github-view/* (8 files)
+- [x] Update components: settings/* (8 files)
+- [x] Update components: toolbar/* (5 files)
+- [x] Update components: update-banner.tsx
+- [x] Replace window.electron.app.openExternal with BrowserOpenURL
+- [x] Replace folder picker with Wails dialog
+- [x] Replace window controls with Wails runtime calls
+- [x] Remove all window.electron type declarations
+- [x] Verify: `grep -r "window.electron" frontend/src/` returns 0 matches
+- [x] Verify: `wails dev` renders full UI without console errors
 
 ## Success Criteria
 

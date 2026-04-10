@@ -183,96 +183,93 @@ type PTYProcess struct {
 - **Shell Resolver** (`shell_resolver.go`): `ResolveDefaultShell()` detects user login shell via dscl (macOS) → $SHELL env → /bin/bash fallback
 - **Session Snapshots** (`Snapshot()`): `TerminalSession` captures metadata + state for persistence/recovery
 
-## Frontend Architecture
+## Frontend Architecture (Phase 04 Complete)
 
 ### 1. React Application Entry Point
 
 **File:** `frontend/src/App.tsx`
 
+React 19 frontend fully migrated from Electron IPC to Wails bindings. All components use typed Wails API adapter instead of `window.electron.*` calls.
+
 ```tsx
 export default function App() {
-    // Demo: single hardcoded PTY
-    const DEMO_ID = 'demo-pty-1'
-    
-    useEffect(() => {
-        PtyCreate(DEMO_ID, '', '')  // Spawn PTY on mount
-            .then(() => setTermReady(true))
-        return () => PtyDestroy(DEMO_ID)  // Cleanup on unmount
-    }, [])
-    
-    return (
-        <div>
-            <TabBar activeTab={activeTab} />
-            {activeTab === 'terminal' && <PtyTerminal />}
-            {activeTab === 'latency' && <LatencyHarness />}
-        </div>
-    )
+    // Multi-tab application with project/terminal management
+    // Uses Zustand stores with Wails backend
+    // Wails IPC via api.* adapter layer
 }
 ```
 
-**Current UI:**
-- Tab bar (Terminal | Latency Test)
-- Conditional rendering by tab
-- Error handling for PTY spawn failures
+**Key Features (Phase 04):**
+- Wails API adapter: `frontend/src/api/` (maps window.go.main.App bindings)
+- Zustand stores: `frontend/src/stores/` (app, settings, notification, update, image, toast)
+- Shared types: `frontend/src/shared/` (types, constants from MultiClaude)
+- Event helpers: `frontend/src/api/events.ts` (typed event subscriptions)
+- Path aliases: `@shared/*` configured in tsconfig.json and vite.config.ts
 
-### 2. PtyTerminal Component
+### 2. API Adapter Layer (Phase 04)
 
-**File:** `frontend/src/components/terminal/pty-terminal.tsx`
+**File:** `frontend/src/api/index.ts`
 
-```tsx
-export function PtyTerminal({ terminalId, onExit }: PtyTerminalProps) {
-    const termRef = useRef<Terminal>()
-    const fitAddonRef = useRef<FitAddon>()
-    
-    useEffect(() => {
-        // Initialize xterm.js
-        const term = new Terminal({
-            cursorBlink: true,
-            fontFamily: 'JetBrains Mono, ...',
-            fontSize: 13,
-            scrollback: 10000,
-            theme: { /* GitHub dark colors */ }
-        })
-        
-        // Listen for output events
-        EventsOn(`pty:output:${terminalId}`, (data: string) => {
-            term.write(data)
-        })
-        
-        // Send keyboard input
-        term.onData((data) => {
-            PtyWrite(terminalId, data)
-        })
-        
-        // Handle resize
-        ResizeObserver on container
-            → fitAddon.fit()
-            → PtyResize(terminalId, cols, rows)
-    }, [terminalId])
+Maps Wails-generated bindings to same interface shape as original `window.electron.*` API:
+
+```typescript
+// Thin adapter: wraps window.go.main.App bindings
+import * as App from '../wailsjs/go/main/App'
+import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime'
+
+export const api = {
+  terminal: { create, destroy, write, resize, list, ... },
+  project: { list, create, update, delete, ... },
+  git: { status, init, commit, push, ... },
+  github: { authStatus, login, logout, ... },
+  settings: { get, set, reset },
+  notification: { getSettings, setSettings, ... },
+  update: { getState, check, download, install },
+  window: { minimize, maximize, close, getState },
+  app: { getPath, openExternal },
+  clipboard: { saveImage },
+  image: { readBase64, delete, scale },
+  ...
 }
 ```
 
-**Dependencies:**
+**Event Helpers:** `frontend/src/api/events.ts` provides typed event subscriptions with cleanup.
+
+### 3. Component Architecture (Phase 04)
+
+**Migrated Components:**
+- **Stores:** `stores/` folder uses Zustand + Wails API adapter (no window.electron references)
+- **Hooks:** `hooks/` folder (use-terminal, use-git-panel, use-file-drop, use-keyboard-shortcuts)
+- **Components:** All terminal, git-panel, github-setup, github-view, settings, toolbar components migrated
+- **Terminal Pane:** Uses xterm.js v5 with FitAddon, receives output via Wails events
+
+**Dependencies (Phase 04):**
+- `zustand` v4.5+ → state management
 - `@xterm/xterm` v5.5.0 → terminal emulator
 - `@xterm/addon-fit` v0.10.0 → responsive resizing
-- `@xterm/addon-web-links` v0.11.0 → clickable hyperlinks
+- `@xterm/addon-webgl` v0.16.0 → WebGL rendering (optional, performance)
+- Font packages: Roboto, JetBrains Mono, Noto Sans CJK
 
-**Theme:** GitHub dark (GitHub Copilot theme colors, not OS theme).
+**Theme:** GitHub dark theme (GitHub Copilot colors)
 
-### 3. Wails IPC Binding Generation
+### 4. Wails IPC Binding Generation (Auto-Generated)
 
-**File:** `frontend/src/wailsjs/` (auto-generated)
+**File:** `frontend/src/wailsjs/` (auto-generated by Wails CLI)
 
-The Wails CLI generates TypeScript stubs:
-```tsx
-// Generated from app.go methods
-export function PtyCreate(arg1: string, arg2: string, arg3: string): Promise<void>
-export function PtyWrite(arg1: string, arg2: string): Promise<void>
-export function PtyResize(arg1: string, arg2: number, arg3: number): Promise<void>
-// etc.
+Wails generates TypeScript stubs from Go App struct methods:
+```typescript
+// Generated from app.go bindings
+export function TerminalCreate(opts?: any): Promise<any>
+export function TerminalWrite(id: string, data: string): Promise<void>
+export function TerminalResize(id: string, cols: number, rows: number): Promise<void>
+export function ProjectList(): Promise<any>
+export function GitStatus(cwd: string): Promise<any>
+// ~60 methods total covering all API surface area
 ```
 
-No manual editing; regenerate after backend changes with `wails dev`.
+**Manual Bindings Extended:** `frontend/wailsjs/go/main/App.d.ts` and `App.js` manually declare all ~60 methods with proper typing.
+
+**Models:** `frontend/wailsjs/models.ts` includes Project class and all shared types.
 
 ## Data Flow Diagrams
 
@@ -367,6 +364,31 @@ Rendered Terminal
 | Resize | <1ms | N/A | Immediate pty.Setsize() |
 | Binary size | N/A | 7.9MB | macOS arm64 |
 
+## Frontend to Backend Communication (Phase 04)
+
+### IPC Pattern
+
+All frontend-to-backend calls follow the pattern:
+1. React component or store calls `api.X.method(args)`
+2. API adapter routes to `window.go.main.App.Method(args)` (Wails binding)
+3. Wails marshals call to Go backend
+4. Go App struct method executes, returns result or error
+5. Wails promise resolves/rejects in frontend
+
+**Event Pattern:**
+1. Go backend calls `runtime.EventsEmit(ctx, "event:name", data)`
+2. Frontend subscribes with `EventsOn("event:name", callback)`
+3. Wails delivers event to all listeners
+4. Frontend handlers execute (e.g., store updates, UI redraws)
+
+### Stub Binding Implementation (Phase 04)
+
+All Go methods defined in `app.go` are stubs returning `void` or `interface{}`:
+- Terminal stubs: All compile cleanly, ready for implementation
+- Project/Git stubs: ~45 methods covering full API surface area
+- Settings/Notification stubs: Full interface exposed
+- Components adapted to use `try/catch` pattern for stub calls
+
 ## Known Architectural Constraints
 
 1. **Single Wails context:** All PTY processes share one Wails app context for event emission
@@ -374,9 +396,10 @@ Rendered Terminal
 3. **Event flooding risk:** No backpressure on EventsEmit; very high output rates could overflow browser
 4. **No persistence:** All PTY state in-memory; lost on app restart
 5. **Platform-specific:** PTY implementation uses Unix APIs (`creack/pty`); Windows uses `winpty` (TBD)
+6. **Vietnamese IME features:** Stubbed out in frontend drop handlers (Electron-specific)
 
 ---
 
-**Document Version:** 1.1  
-**Last Updated:** 2026-04-09  
-**Architecture Review:** Phases 01 + 02 + 03 complete
+**Document Version:** 1.2 (Phase 04 Update)  
+**Last Updated:** 2026-04-10  
+**Architecture Review:** Phases 01 + 02 + 03 + 04 complete
