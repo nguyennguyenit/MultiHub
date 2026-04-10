@@ -1,3 +1,5 @@
 export { GitHubPanelContent } from './github-view'
 export { GitHubActionBar } from './github-action-bar'
 export { RepoInfoHeader } from './repo-info-header'
+export { GitHubPanelSummary } from './github-panel-summary'
+export { GitHubPanelTabs } from './github-panel-tabs'

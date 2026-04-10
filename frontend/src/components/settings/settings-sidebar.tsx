@@ -11,7 +11,7 @@ const TABS: { id: SettingsTab; label: string; description: string; icon: React.R
   {
     id: 'appearance',
     label: 'Appearance',
-    description: 'Customize how MultiClaude looks',
+    description: 'Customize how MultiHub looks',
     icon: <PaletteIcon />
   },
   {
@@ -29,7 +29,7 @@ const TABS: { id: SettingsTab; label: string; description: string; icon: React.R
   {
     id: 'updates',
     label: 'Updates',
-    description: 'MultiClaude updates',
+    description: 'MultiHub updates',
     icon: <UpdateIcon />
   }
 ]

@@ -1,37 +1,31 @@
 import { test, expect } from '@playwright/test'
+import { TEST_IDS } from '../../frontend/src/shared/constants/test-ids'
 
 test.describe('Terminal management', () => {
-  test('app loads and shows UI', async ({ page }) => {
+  test('app loads the workbench shell and empty project state', async ({ page }) => {
     await page.goto('/')
-    // The main layout should render within 5 s
     await expect(page).toHaveTitle(/MultiHub/i, { timeout: 5_000 })
+    await expect(page.getByTestId(TEST_IDS.shell.toolbar)).toBeVisible()
+    await expect(page.getByTestId(TEST_IDS.emptyState.project)).toBeVisible()
   })
 
-  test('create a new terminal', async ({ page }) => {
+  test('github panel opens from the shell', async ({ page }) => {
     await page.goto('/')
-    await page.waitForSelector('[data-testid="terminal-grid"], [data-testid="empty-state"]', {
-      timeout: 10_000,
-    })
+    await page.waitForLoadState('networkidle')
 
-    const newTerminalBtn = page.locator('[data-testid="new-terminal-button"]')
-    if (await newTerminalBtn.isVisible()) {
-      await newTerminalBtn.click()
-      await expect(page.locator('[data-testid="terminal-pane"]')).toHaveCount(1, {
-        timeout: 5_000,
-      })
-    }
+    await page.getByTestId(TEST_IDS.shell.githubPanelButton).click()
+    const panel = page.getByTestId(TEST_IDS.panel.github)
+    await expect(panel).toBeVisible({ timeout: 3_000 })
+    await expect(panel).toHaveAttribute('data-panel-variant', 'github')
+    await expect(page.getByTestId(TEST_IDS.panel.githubEmptyState)).toBeVisible()
   })
 
-  test('terminal accepts keyboard input', async ({ page }) => {
+  test('project-empty state keeps the open-project CTA visible', async ({ page }) => {
     await page.goto('/')
-    await page.waitForSelector('[data-testid="terminal-pane"]', { timeout: 10_000 })
+    await page.waitForLoadState('networkidle')
 
-    const pane = page.locator('[data-testid="terminal-pane"]').first()
-    await pane.click()
-    await page.keyboard.type('echo multihub-e2e')
-    await page.keyboard.press('Enter')
-
-    // Output should appear within 3 s
-    await expect(pane).toContainText('multihub-e2e', { timeout: 3_000 })
+    const projectEmptyState = page.getByTestId(TEST_IDS.emptyState.project)
+    await expect(projectEmptyState).toBeVisible()
+    await expect(projectEmptyState.getByRole('button', { name: 'Open Project Folder' })).toBeVisible()
   })
 })

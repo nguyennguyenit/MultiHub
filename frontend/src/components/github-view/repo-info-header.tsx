@@ -1,10 +1,18 @@
 import { BranchSelector } from '../git-panel/branch-selector'
+import { api } from '../../api'
 import type { GitBranch } from '@shared/types'
 
 interface RepoInfoHeaderProps {
-  repoName: string | undefined
+  repoName: string
+  repoHint: string
   currentBranch: string | undefined
+  repoUrl?: string
   changesCount: number
+  stagedCount: number
+  unstagedCount: number
+  hasRemote: boolean
+  aheadBy: number
+  behindBy: number
   branches: GitBranch[]
   onCheckoutBranch: (name: string) => Promise<void>
   onCreateBranch: (name: string) => Promise<void>
@@ -12,23 +20,42 @@ interface RepoInfoHeaderProps {
 }
 
 export function RepoInfoHeader({
-  repoName: _repoName,
+  repoName,
+  repoHint,
   currentBranch,
+  repoUrl,
   changesCount,
+  stagedCount,
+  unstagedCount,
+  hasRemote,
+  aheadBy,
+  behindBy,
   branches,
   onCheckoutBranch,
   onCreateBranch,
-  isLoading
+  isLoading,
 }: RepoInfoHeaderProps) {
   return (
-    <div className="px-4 py-3 bg-[var(--mc-bg-tertiary)] border-b border-[var(--mc-border)] flex items-center justify-between">
-      {/* Branch selector */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-2 py-1 rounded bg-[var(--mc-bg-secondary)] border border-[var(--mc-border)]">
-          <svg className="w-3.5 h-3.5 text-[var(--mc-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-          </svg>
+    <div className="github-panel-summary-card github-panel-summary-card--header">
+      <div className="github-panel-summary-meta">
+        <div className="github-panel-summary-copy">
+          <div className="github-panel-summary-heading">
+            <span className="github-panel-summary-eyebrow">Repository</span>
+            {repoUrl && (
+              <button
+                type="button"
+                className="github-panel-summary-link"
+                onClick={() => void api.app.openExternal(repoUrl)}
+              >
+                Open on GitHub
+              </button>
+            )}
+          </div>
+          <h2 className="github-panel-summary-title">{repoName}</h2>
+          <p className="github-panel-summary-subtitle">{repoHint}</p>
+        </div>
+
+        <div className="github-panel-summary-branch">
           <BranchSelector
             currentBranch={currentBranch}
             branches={branches}
@@ -39,24 +66,24 @@ export function RepoInfoHeader({
         </div>
       </div>
 
-      {/* Changes count badge */}
-      <div className={`
-        flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border
-        ${changesCount > 0
-          ? 'bg-amber-400/10 text-amber-500 border-amber-400/20'
-          : 'bg-[var(--mc-bg-secondary)] text-[var(--mc-text-muted)] border-[var(--mc-border)]'
-        }
-      `}>
-        <span className="relative flex h-2 w-2">
-          {changesCount > 0 && (
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-          )}
-          <span className={`relative inline-flex rounded-full h-2 w-2 ${changesCount > 0 ? 'bg-amber-500' : 'bg-[var(--mc-text-muted)]'}`}></span>
-        </span>
-        <span>
-          {changesCount} changed file{changesCount !== 1 ? 's' : ''}
-        </span>
+      <div className="github-panel-pill-row">
+        <SummaryPill label={`${changesCount} change${changesCount === 1 ? '' : 's'}`} tone={changesCount > 0 ? 'warm' : 'neutral'} />
+        <SummaryPill label={`${stagedCount} staged`} tone={stagedCount > 0 ? 'positive' : 'neutral'} />
+        <SummaryPill label={`${unstagedCount} unstaged`} tone={unstagedCount > 0 ? 'warm' : 'neutral'} />
+        {hasRemote && <SummaryPill label={`Ahead ${aheadBy}`} tone={aheadBy > 0 ? 'accent' : 'neutral'} />}
+        {hasRemote && <SummaryPill label={`Behind ${behindBy}`} tone={behindBy > 0 ? 'warm' : 'neutral'} />}
+        <SummaryPill label={hasRemote ? 'Remote linked' : 'Local only'} tone={hasRemote ? 'positive' : 'neutral'} />
       </div>
     </div>
   )
+}
+
+function SummaryPill({
+  label,
+  tone,
+}: {
+  label: string
+  tone: 'neutral' | 'positive' | 'warm' | 'accent'
+}) {
+  return <span className={`github-panel-pill github-panel-pill--${tone}`}>{label}</span>
 }

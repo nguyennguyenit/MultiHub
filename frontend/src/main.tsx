@@ -2,6 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './styles/globals.css'
+import './styles/shell.css'
+import './styles/panels.css'
+import './styles/workspace.css'
 
 // Terminal fonts (monospace)
 import '@fontsource/jetbrains-mono/400.css'

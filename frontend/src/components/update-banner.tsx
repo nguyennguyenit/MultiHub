@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useUpdateStore } from '../stores'
 
-const GITHUB_REPO = 'nguyennguyenit/MultiClaude'
+const GITHUB_REPO = 'nguyennguyenit/MultiHub'
 
 export function UpdateBanner() {
   const { state, downloadUpdate, installUpdate } = useUpdateStore()

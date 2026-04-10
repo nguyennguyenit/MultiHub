@@ -19,6 +19,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test-setup.ts'],
+    typecheck: { tsconfig: './tsconfig.test.json' },
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     environmentOptions: {
       jsdom: { url: 'http://localhost' },

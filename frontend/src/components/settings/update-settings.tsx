@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useUpdateStore } from '../../stores'
 import { SettingsTitle } from './settings-typography'
 
-const GITHUB_REPO = 'nguyennguyenit/MultiClaude'
+const GITHUB_REPO = 'nguyennguyenit/MultiHub'
 
 export function UpdateSettings() {
   const { state, loadState, checkForUpdates, downloadUpdate, installUpdate } = useUpdateStore()
@@ -20,7 +20,7 @@ export function UpdateSettings() {
 
   return (
     <div className="flex flex-col gap-8 pb-16 max-w-2xl">
-      <SettingsTitle description="Manage MultiClaude updates">Updates</SettingsTitle>
+      <SettingsTitle description="Manage MultiHub updates">Updates</SettingsTitle>
 
       {/* Current Version */}
       <div className="settings-card rounded-xl flex items-center justify-between">
@@ -96,7 +96,7 @@ export function UpdateSettings() {
 
         {status === 'ready' && isManualInstall && (
           <p className="text-sm text-[var(--mc-text-muted)]">
-            MultiClaude will close and open the downloaded DMG so you can drag it into Applications.
+            MultiHub will close and open the downloaded DMG so you can drag it into Applications.
           </p>
         )}
 

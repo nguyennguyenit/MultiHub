@@ -1,5 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { TEST_IDS } from '@shared/constants'
 import { TerminalPane } from './terminal-pane'
+import { TerminalEmptyState } from './terminal-empty-state'
 import { ResizeHandle } from './terminal-resize-handle'
 import { useTerminalResize } from '../../hooks/use-terminal-resize'
 import type { Terminal } from '@shared/types'
@@ -7,6 +9,7 @@ import type { Terminal } from '@shared/types'
 interface TerminalGridProps {
   terminals: Terminal[]
   activeProjectId: string | null
+  activeProjectName?: string
   activeProjectPath?: string
   activeTerminalId: string | null
   onTerminalClick: (id: string) => void
@@ -49,6 +52,7 @@ function splitIntoRows<T>(items: T[], cols: number): T[][] {
 export const TerminalGrid = memo(function TerminalGrid({
   terminals,
   activeProjectId,
+  activeProjectName,
   activeProjectPath,
   activeTerminalId,
   onTerminalClick,
@@ -112,7 +116,7 @@ export const TerminalGrid = memo(function TerminalGrid({
   )
 
   return (
-    <div style={{ height: '100%', position: 'relative' }}>
+    <div style={{ height: '100%', position: 'relative' }} data-testid={TEST_IDS.shell.terminalGrid}>
       {/* All project grids rendered in single parent - inactive hidden with visibility:hidden.
           visibility:hidden preserves xterm.js scroll/cursor state unlike display:none */}
       {projectGroups.map(group => {
@@ -188,30 +192,12 @@ export const TerminalGrid = memo(function TerminalGrid({
       })}
 
       {visibleTerminalCount === 0 && (
-        <div className="welcome-screen" style={{ position: 'absolute', inset: 0 }}>
-          <svg className="welcome-terminal-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="4 17 10 11 4 5" />
-            <line x1="12" y1="19" x2="20" y2="19" />
-          </svg>
-          <h2 className="welcome-title" style={{ fontSize: '24px' }}>Multi Terminals</h2>
-          <p className="welcome-hint" style={{ margin: 0 }}>
-            Spawn multiple terminals to run agents in parallel.
-            <br />
-            Press <kbd>Ctrl+T</kbd> to create a new terminal.
-          </p>
-          {onAddTerminal && (
-            <button type="button" onClick={() => onAddTerminal()} className="welcome-btn">
-              + New Terminal
-            </button>
-          )}
-          {activeProjectPath && (
-            <p className="welcome-project-path" title={activeProjectPath}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-              </svg>
-              {activeProjectPath}
-            </p>
-          )}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <TerminalEmptyState
+            projectName={activeProjectName}
+            projectPath={activeProjectPath}
+            onAddTerminal={onAddTerminal}
+          />
         </div>
       )}
     </div>

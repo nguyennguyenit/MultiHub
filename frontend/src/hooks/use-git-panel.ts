@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { GitFileStatus, GitBranch, GitLogEntry, GitStashEntry, GitStatus, GitBranchDiff } from '@shared/types'
 import { api } from '../api'
 
+function logGitPanelError(operation: string, error: unknown) {
+  console.error(`[useGitPanel] ${operation} failed`, error)
+}
+
 interface UseGitPanelOptions {
   projectPath: string | undefined
   enabled?: boolean
@@ -56,30 +60,69 @@ export function useGitPanel({ projectPath, enabled = true }: UseGitPanelOptions)
   baseBranchRef.current = baseBranch
   const currentBranch = gitStatus?.branch
   const isRefreshingRef = useRef(false)
+  const projectPathRef = useRef(projectPath)
+  const projectVersionRef = useRef(0)
+
+  useEffect(() => {
+    projectPathRef.current = projectPath
+    projectVersionRef.current += 1
+    isRefreshingRef.current = false
+    setSelectedFile(null)
+    setDiff(null)
+    setGitStatus(null)
+    setFiles([])
+    setBranches([])
+    setLogEntries([])
+    setStashEntries([])
+    setBranchDiff(null)
+  }, [projectPath])
 
   const refresh = useCallback(async () => {
     if (!projectPath || !enabled || isRefreshingRef.current) return
+    const requestVersion = projectVersionRef.current
+    const requestProjectPath = projectPath
+    const isStaleRequest = () =>
+      projectVersionRef.current !== requestVersion || projectPathRef.current !== requestProjectPath
+
     isRefreshingRef.current = true
     setIsLoading(true)
     try {
-      const [status, fileStatus] = await Promise.all([
+      const [status, fileStatus] = await Promise.allSettled([
         api.git.status(projectPath),
         api.git.fileStatus(projectPath)
       ])
-      setGitStatus(status)
-      setFiles(fileStatus ?? [])
+      if (isStaleRequest()) return
+      if (status.status === 'fulfilled') {
+        setGitStatus(status.value)
+      } else {
+        logGitPanelError('status', status.reason)
+        setGitStatus(null)
+      }
+      if (fileStatus.status === 'fulfilled') {
+        setFiles(fileStatus.value ?? [])
+      } else {
+        logGitPanelError('fileStatus', fileStatus.reason)
+        setFiles([])
+      }
     } finally {
-      setIsLoading(false)
+      if (!isStaleRequest()) {
+        setIsLoading(false)
+      }
       isRefreshingRef.current = false
     }
   }, [projectPath, enabled])
 
   const refreshAll = useCallback(async () => {
     if (!projectPath || !enabled || isRefreshingRef.current) return
+    const requestVersion = projectVersionRef.current
+    const requestProjectPath = projectPath
+    const isStaleRequest = () =>
+      projectVersionRef.current !== requestVersion || projectPathRef.current !== requestProjectPath
+
     isRefreshingRef.current = true
     setIsLoading(true)
     try {
-      const [status, fileStatus, branchList, log, stash, brDiff] = await Promise.all([
+      const [status, fileStatus, branchList, log, stash, brDiff] = await Promise.allSettled([
         api.git.status(projectPath),
         api.git.fileStatus(projectPath),
         api.git.branches(projectPath),
@@ -87,19 +130,50 @@ export function useGitPanel({ projectPath, enabled = true }: UseGitPanelOptions)
         api.git.stashList(projectPath),
         api.git.diffBranch(projectPath, baseBranchRef.current)
       ])
-      setGitStatus(status)
-      setFiles(fileStatus ?? [])
-      setBranches(branchList ?? [])
-      setLogEntries(log ?? [])
-      setStashEntries(stash ?? [])
-      if (brDiff) {
-        setBranchDiff(brDiff)
-        if (brDiff.baseBranch && brDiff.baseBranch !== baseBranchRef.current) {
-          setBaseBranch(brDiff.baseBranch)
+      if (isStaleRequest()) return
+      if (status.status === 'fulfilled') {
+        setGitStatus(status.value)
+      } else {
+        logGitPanelError('status', status.reason)
+        setGitStatus(null)
+      }
+      if (fileStatus.status === 'fulfilled') {
+        setFiles(fileStatus.value ?? [])
+      } else {
+        logGitPanelError('fileStatus', fileStatus.reason)
+        setFiles([])
+      }
+      if (branchList.status === 'fulfilled') {
+        setBranches(branchList.value ?? [])
+      } else {
+        logGitPanelError('branches', branchList.reason)
+        setBranches([])
+      }
+      if (log.status === 'fulfilled') {
+        setLogEntries(log.value ?? [])
+      } else {
+        logGitPanelError('log', log.reason)
+        setLogEntries([])
+      }
+      if (stash.status === 'fulfilled') {
+        setStashEntries(stash.value ?? [])
+      } else {
+        logGitPanelError('stashList', stash.reason)
+        setStashEntries([])
+      }
+      if (brDiff.status === 'fulfilled') {
+        setBranchDiff(brDiff.value)
+        if (brDiff.value?.baseBranch && brDiff.value.baseBranch !== baseBranchRef.current) {
+          setBaseBranch(brDiff.value.baseBranch)
         }
+      } else {
+        logGitPanelError('diffBranch', brDiff.reason)
+        setBranchDiff(null)
       }
     } finally {
-      setIsLoading(false)
+      if (!isStaleRequest()) {
+        setIsLoading(false)
+      }
       isRefreshingRef.current = false
     }
   }, [projectPath, enabled])
@@ -107,8 +181,13 @@ export function useGitPanel({ projectPath, enabled = true }: UseGitPanelOptions)
   const selectFile = useCallback(async (path: string | null) => {
     setSelectedFile(path)
     if (!path || !projectPath) { setDiff(null); return }
+    const requestVersion = projectVersionRef.current
+    const requestProjectPath = projectPath
     const file = files.find(f => f.path === path)
     const result = await api.git.diff(projectPath, path, file?.staged ?? false, file?.oldPath ?? '')
+    if (projectVersionRef.current !== requestVersion || projectPathRef.current !== requestProjectPath) {
+      return
+    }
     setDiff(result?.success ? result.diff || '' : null)
   }, [projectPath, files])
 
@@ -225,7 +304,7 @@ export function useGitPanel({ projectPath, enabled = true }: UseGitPanelOptions)
 
   useEffect(() => {
     if (!enabled || !projectPath) return
-    refreshAll()
+    void refreshAll()
     const interval = setInterval(refresh, 5000)
     return () => clearInterval(interval)
   }, [refresh, refreshAll, enabled, projectPath])

@@ -9,7 +9,7 @@ export function ThemeSelector() {
 
   return (
     <div className="flex flex-col gap-8 pb-16 max-w-2xl">
-      <SettingsTitle description="Customize how MultiClaude looks">Appearance</SettingsTitle>
+      <SettingsTitle description="Customize how MultiHub looks">Appearance</SettingsTitle>
 
       {/* Color Theme */}
       <div className="settings-card rounded-xl flex flex-col gap-3">

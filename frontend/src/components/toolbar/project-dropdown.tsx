@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
+import { TEST_IDS } from '@shared/constants'
 import type { Project } from '@shared/types'
 
 interface ProjectDropdownProps {
   projects: Project[]
   activeProjectId: string | null
+  activeProjectPath?: string
   onSelectProject: (id: string | null) => void
   onAddProject: () => void
   onDeleteProject: (id: string) => void
@@ -15,6 +17,7 @@ const MAX_SHORTCUT_PROJECTS = 9
 export function ProjectDropdown({
   projects,
   activeProjectId,
+  activeProjectPath,
   onSelectProject,
   onAddProject,
   onDeleteProject
@@ -45,15 +48,22 @@ export function ProjectDropdown({
     <div ref={dropdownRef} className="project-dropdown">
       <button
         type="button"
-        data-testid="project-dropdown-trigger"
+        data-testid={TEST_IDS.shell.projectSwitcherButton}
         className="project-dropdown-trigger"
         onClick={() => setIsOpen(prev => !prev)}
         title="Switch project (Alt+1-9)"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span className="project-dropdown-name">
-          {activeProject ? activeProject.name : 'No project'}
+        <span className="project-dropdown-copy">
+          <span className="project-dropdown-name">
+            {activeProject ? activeProject.name : 'Open Project Folder'}
+          </span>
+          <span className="project-dropdown-meta">
+            {activeProject
+              ? activeProjectPath ?? activeProject.path
+              : `${projects.length} saved ${projects.length === 1 ? 'project' : 'projects'}`}
+          </span>
         </span>
         {/* Chevron icon */}
         <svg
@@ -75,8 +85,14 @@ export function ProjectDropdown({
         <div
           className="project-dropdown-menu"
           role="listbox"
-          data-testid="project-dropdown-menu"
+          data-testid={TEST_IDS.shell.projectSwitcherMenu}
         >
+          {projects.length === 0 && (
+            <div className="project-dropdown-empty">
+              No projects saved yet. Open a project folder to start the workbench.
+            </div>
+          )}
+
           {projects.map((project, index) => (
             <div
               key={project.id}
@@ -93,10 +109,15 @@ export function ProjectDropdown({
                   setIsOpen(false)
                 }}
               >
-                {index < MAX_SHORTCUT_PROJECTS && (
-                  <span className="project-shortcut-badge">{index + 1}</span>
-                )}
-                <span className="project-dropdown-item-name">{project.name}</span>
+                <span className="project-dropdown-shortcut">
+                  {index < MAX_SHORTCUT_PROJECTS ? index + 1 : '•'}
+                </span>
+                <span className="project-dropdown-item-copy">
+                  <span className="project-dropdown-item-name">{project.name}</span>
+                  <span className="project-dropdown-item-path" title={project.path}>
+                    {project.path}
+                  </span>
+                </span>
               </button>
               <button
                 type="button"
@@ -117,13 +138,13 @@ export function ProjectDropdown({
           <button
             type="button"
             className="project-dropdown-add"
-            data-testid="project-dropdown-add"
+            data-testid={TEST_IDS.shell.projectDropdownAddButton}
             onClick={() => {
               onAddProject()
               setIsOpen(false)
             }}
           >
-            + Add Project
+            + Open Project Folder
           </button>
         </div>
       )}

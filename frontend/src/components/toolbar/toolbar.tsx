@@ -1,8 +1,11 @@
 import { api } from '../../api'
 import { useEffect, useState } from 'react'
+import { TEST_IDS } from '@shared/constants'
 import { ToolbarButton } from './toolbar-button'
+import { ProjectDropdown } from './project-dropdown'
 import logoImg from '../../assets/logo.png'
 import type { WindowState } from '@shared/types'
+import type { Project } from '@shared/types'
 
 // Detect macOS for traffic light padding
 const isMac = navigator.platform.toLowerCase().includes('mac')
@@ -16,6 +19,12 @@ interface ToolbarProps {
   onAddTerminal: () => void
   terminalCount: number
   terminalLimit: number
+  projects?: Project[]
+  activeProjectId?: string | null
+  activeProjectPath?: string
+  onSelectProject?: (id: string | null) => void
+  onAddProject?: () => void
+  onDeleteProject?: (id: string) => void
   onToggleGitHub: () => void
   onToggleSettings: () => void
   activePanel: string | null
@@ -43,13 +52,20 @@ import { WindowControls } from './window-controls'
 /** Compact 32px toolbar replacing the titlebar + activity bar */
 export function Toolbar({
   onAddTerminal: _onAddTerminal,
-  terminalCount: _terminalCount,
+  terminalCount,
   terminalLimit: _terminalLimit,
+  projects = [],
+  activeProjectId = null,
+  activeProjectPath,
+  onSelectProject = () => {},
+  onAddProject = () => {},
+  onDeleteProject = () => {},
   onToggleGitHub,
   onToggleSettings,
   activePanel
 }: ToolbarProps) {
   const [windowState, setWindowState] = useState(DEFAULT_WINDOW_STATE)
+  const activeProject = projects.find((project) => project.id === activeProjectId) ?? null
 
   useEffect(() => {
     if (!isMac) return
@@ -77,7 +93,7 @@ export function Toolbar({
   }, [])
 
   return (
-    <div className="toolbar">
+    <header className="toolbar" data-testid={TEST_IDS.shell.toolbar}>
       {/* Drag region sits behind interactive elements */}
       <div className="toolbar-drag" />
 
@@ -87,29 +103,66 @@ export function Toolbar({
         style={{ paddingLeft: isMac && !windowState.isExpanded ? 72 : 8 }}
       >
         <div className="toolbar-brand">
-          <img src={logoImg} alt="MultiClaude" className="toolbar-brand-logo" />
-          <span className="toolbar-brand-name">MultiClaude</span>
+          <img src={logoImg} alt="MultiHub" className="toolbar-brand-logo" />
+          <span className="toolbar-brand-name">MultiHub</span>
         </div>
       </div>
 
-      {/* Right group: panel toggles + update indicator + custom window controls */}
-      <div className="toolbar-group" style={{ marginLeft: 'auto' }}>
+      <div className="toolbar-group toolbar-group-center">
+        <div className="toolbar-project-controls">
+          <ProjectDropdown
+            projects={projects}
+            activeProjectId={activeProjectId}
+            activeProjectPath={activeProjectPath}
+            onSelectProject={onSelectProject}
+            onAddProject={onAddProject}
+            onDeleteProject={onDeleteProject}
+          />
+          <button
+            type="button"
+            className="toolbar-add-project"
+            data-testid={TEST_IDS.shell.addProjectButton}
+            onClick={onAddProject}
+          >
+            Open Project
+          </button>
+        </div>
+
+        <div className="toolbar-context-card">
+          <span className="toolbar-context-label">
+            {activeProject ? 'Active Project' : 'Workbench'}
+          </span>
+          <span className="toolbar-context-value" title={activeProjectPath}>
+            {activeProject
+              ? activeProjectPath ?? activeProject.path
+              : 'Open a project folder to start your terminal workspace'}
+          </span>
+        </div>
+      </div>
+
+      {/* Right group: panel toggles + project state + custom window controls */}
+      <div className="toolbar-group toolbar-group-right">
+        <div className="toolbar-terminal-summary">
+          <span className="toolbar-terminal-summary-label">Terminals</span>
+          <span className="toolbar-terminal-summary-value">{terminalCount}</span>
+        </div>
         <ToolbarButton
           icon={<IconGitHub />}
           title="GitHub Panel (Ctrl+G)"
           onClick={onToggleGitHub}
           active={activePanel === 'github'}
+          testId={TEST_IDS.shell.githubPanelButton}
         />
         <ToolbarButton
           icon={<IconSettings />}
           title="Settings"
           onClick={onToggleSettings}
           active={activePanel === 'settings'}
-          testId="settings-button"
+          testId={TEST_IDS.shell.settingsButton}
         />
         {/* Only show custom window controls on non-macOS platforms since macOS has native traffic lights on the left */}
         {!isMac && <WindowControls />}
       </div>
-    </div>
+    </header>
   )
 }

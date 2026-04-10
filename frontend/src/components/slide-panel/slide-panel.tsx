@@ -4,13 +4,27 @@ interface SlidePanelProps {
   isOpen: boolean
   onClose: () => void
   title: string
+  description?: string
+  testId?: string
+  closeTestId?: string
+  variant?: 'default' | 'github'
   /** Optional extra content rendered in the header, between the title and close button */
   headerExtra?: React.ReactNode
   children: React.ReactNode
 }
 
 /** Generic slide panel that overlays from right (landscape) or bottom (portrait) */
-export function SlidePanel({ isOpen, onClose, title, headerExtra, children }: SlidePanelProps) {
+export function SlidePanel({
+  isOpen,
+  onClose,
+  title,
+  description,
+  testId,
+  closeTestId,
+  variant = 'default',
+  headerExtra,
+  children,
+}: SlidePanelProps) {
   const [isPortrait, setIsPortrait] = useState(
     () => typeof window !== 'undefined' && window.innerHeight > window.innerWidth
   )
@@ -36,18 +50,31 @@ export function SlidePanel({ isOpen, onClose, title, headerExtra, children }: Sl
 
   return (
     <div
-      className={`slide-panel ${dirClass} ${openClass}`}
+      className={`slide-panel slide-panel-${variant} ${dirClass} ${openClass}`}
       // visibility:hidden preserves child state (data, form state) when closed
       style={{ visibility: isOpen ? 'visible' : 'hidden' }}
+      data-testid={testId}
+      data-panel-variant={variant}
+      role="dialog"
+      aria-modal="false"
+      aria-label={title}
     >
       <div className="slide-panel-header">
-        <span className="slide-panel-title">{title}</span>
+        <div className="slide-panel-heading">
+          <span className="slide-panel-title">{title}</span>
+          {description && <span className="slide-panel-description">{description}</span>}
+        </div>
         {headerExtra && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
             {headerExtra}
           </div>
         )}
-        <button className="slide-panel-close" onClick={onClose} title="Close (Esc)">
+        <button
+          className="slide-panel-close"
+          onClick={onClose}
+          title="Close (Esc)"
+          data-testid={closeTestId}
+        >
           ×
         </button>
       </div>

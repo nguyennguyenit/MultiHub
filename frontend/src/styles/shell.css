@@ -1,0 +1,319 @@
+:root {
+  --toolbar-height: 48px;
+  --panel-width: clamp(420px, 34vw, 560px);
+  --github-panel-width: clamp(460px, 38vw, 620px);
+}
+
+.toolbar {
+  height: var(--toolbar-height);
+  gap: 14px;
+  padding: 0 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), var(--bg-secondary));
+  backdrop-filter: blur(18px);
+}
+
+.toolbar-group {
+  gap: 10px;
+}
+
+.toolbar-group-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar-group-right {
+  margin-left: auto;
+}
+
+.toolbar-brand {
+  gap: 10px;
+}
+
+.toolbar-brand-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.toolbar-brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toolbar-project-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.toolbar-add-project {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.toolbar-add-project:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  transform: translateY(-1px);
+}
+
+.toolbar-context-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 0 14px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+}
+
+.toolbar-context-label {
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.toolbar-context-value {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar-terminal-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+.toolbar-terminal-summary-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.toolbar-terminal-summary-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.toolbar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 8%, var(--border));
+  background: color-mix(in srgb, var(--bg-primary) 76%, transparent);
+  opacity: 0.9;
+}
+
+.toolbar-btn:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.toolbar-btn.active {
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.toolbar-btn.active::after {
+  display: none;
+}
+
+.project-dropdown {
+  position: relative;
+  min-width: 260px;
+  max-width: 320px;
+}
+
+.project-dropdown-trigger {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.project-dropdown-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.project-dropdown-name,
+.project-dropdown-meta,
+.project-dropdown-item-name,
+.project-dropdown-item-path {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-dropdown-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.project-dropdown-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.project-dropdown-chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.project-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(360px, calc(100vw - 48px));
+  padding: 8px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  background: color-mix(in srgb, var(--bg-secondary) 92%, black 8%);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
+  z-index: 50;
+}
+
+.project-dropdown-empty {
+  padding: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.project-dropdown-item {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.project-dropdown-item-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.project-dropdown-item.active .project-dropdown-item-btn,
+.project-dropdown-item-btn:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.project-dropdown-shortcut {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.project-dropdown-item-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.project-dropdown-item-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.project-dropdown-item-path {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.project-dropdown-delete,
+.project-dropdown-add {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.project-dropdown-delete {
+  width: 34px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.project-dropdown-add {
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px 12px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 1120px) {
+  .toolbar-context-card {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .toolbar {
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  .toolbar-add-project,
+  .toolbar-terminal-summary {
+    display: none;
+  }
+
+  .project-dropdown {
+    min-width: 220px;
+  }
+}

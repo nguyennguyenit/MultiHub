@@ -1,17 +1,17 @@
 import { useEffect, useCallback, useState, useRef } from 'react'
-import { Toolbar, ProjectBar } from './components/toolbar'
+import { Toolbar } from './components/toolbar'
 import { UpdateBanner } from './components/update-banner'
 import { TerminalGrid, TerminalActionBar } from './components/terminal'
 import { WelcomeScreen } from './components/welcome-screen'
 import { ToastContainer } from './components/toast-container'
-import { SettingsModal } from './components/settings'
+import { SettingsPanelContent } from './components/settings'
 import { SlidePanel } from './components/slide-panel'
 import { GitHubPanelContent } from './components/github-view/github-view'
 import { GitInitDialog, GitHubConnectDialog } from './components/github-setup'
 import { useAppStore, useSettingsStore, useToastStore, setupNotificationListener, setupUpdateListener } from './stores'
 import { useKeyboardShortcuts, TERMINAL_DISPOSE_DELAY } from './hooks'
 import { joinPathsForTerminal } from './utils'
-import { THEMES, APP_FONTS, getTerminalFontFamilyById } from '@shared/constants'
+import { THEMES, APP_FONTS, TEST_IDS, getTerminalFontFamilyById } from '@shared/constants'
 import type { WindowsShell, Project } from '@shared/types'
 import { api } from './api'
 
@@ -35,13 +35,13 @@ function App() {
     setActivePanel(prev => prev === panel ? null : panel)
   }, [])
 
-  const { pendingSettings, loadSettings, detectWsl, getTerminalLimitValue } = useSettingsStore()
+  const { pendingSettings, loadSettings, detectWsl, getTerminalLimitValue, cancelSettings } = useSettingsStore()
 
   const [gitInitDialogOpen, setGitInitDialogOpen] = useState(false)
   const [githubConnectDialogOpen, setGithubConnectDialogOpen] = useState(false)
   const [pendingSetupProject, setPendingSetupProject] = useState<Project | null>(null)
 
-  const prevProjectIdRef = useRef<string | null>(null)
+  const projectSelectionRequestRef = useRef(0)
   const activeProject = projects.find(p => p.id === activeProjectId)
   const visibleTerminals = activeProjectId
     ? terminals.filter(t => t.projectId === activeProjectId)
@@ -76,10 +76,16 @@ function App() {
   }, [terminals, removeProject, removeTerminal])
 
   const handleSelectProject = useCallback(async (id: string | null) => {
-    if (!id) { setActiveProject(null); setActiveTerminal(null); return }
+    const requestId = ++projectSelectionRequestRef.current
+    if (!id) {
+      setActiveProject(null)
+      setActiveTerminal(null)
+      return
+    }
     const project = projects.find(p => p.id === id)
     if (!project) return
     const exists = await api.project.checkFolder(project.path)
+    if (requestId !== projectSelectionRequestRef.current) return
     if (!exists) {
       useToastStore.getState().addToast(
         `Project "${project.name}" folder no longer exists. Removing from list.`, 'warning'
@@ -89,8 +95,35 @@ function App() {
       return
     }
     switchToProject(id)
-    prevProjectIdRef.current = id
   }, [projects, switchToProject, removeProject, setActiveProject, setActiveTerminal])
+
+  const handleCloseSettingsPanel = useCallback(() => {
+    cancelSettings()
+    setActivePanel(null)
+  }, [cancelSettings])
+
+  const handleToggleGitHubPanel = useCallback(() => {
+    setActivePanel((prev) => {
+      if (prev === 'github') {
+        return null
+      }
+      if (prev === 'settings') {
+        cancelSettings()
+      }
+      return 'github'
+    })
+  }, [cancelSettings])
+
+  const handleToggleSettingsPanel = useCallback(() => {
+    setActivePanel((prev) => {
+      if (prev === 'settings') {
+        cancelSettings()
+        return null
+      }
+      cancelSettings()
+      return 'settings'
+    })
+  }, [cancelSettings])
 
   const handleAddTerminal = useCallback(async (shell?: WindowsShell) => {
     const { terminals } = useAppStore.getState()
@@ -178,7 +211,7 @@ function App() {
     onAddTerminal: handleAddTerminal,
     onCloseTerminal: handleCloseTerminal,
     onSelectProject: handleSelectProject,
-    onToggleGitHubPanel: () => togglePanel('github')
+    onToggleGitHubPanel: handleToggleGitHubPanel
   })
 
   useEffect(() => { loadSettings(); detectWsl() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -253,15 +286,6 @@ function App() {
   return (
     <div className="app">
       <ToastContainer />
-      <SettingsModal isOpen={activePanel === 'settings'} onClose={() => setActivePanel(null)} />
-      <SlidePanel
-        isOpen={activePanel === 'github'}
-        onClose={() => setActivePanel(null)}
-        title=""
-        headerExtra={<GitHubHeaderExtra projectPath={activeProject?.path} />}
-      >
-        {activePanel === 'github' && <GitHubPanelContent projectPath={activeProject?.path} />}
-      </SlidePanel>
       <GitInitDialog
         isOpen={gitInitDialogOpen}
         projectName={pendingSetupProject?.name || ''}
@@ -281,8 +305,14 @@ function App() {
         onAddTerminal={handleAddTerminal}
         terminalCount={visibleTerminals.length}
         terminalLimit={getTerminalLimitValue()}
-        onToggleGitHub={() => togglePanel('github')}
-        onToggleSettings={() => togglePanel('settings')}
+        projects={projects}
+        activeProjectId={activeProjectId}
+        activeProjectPath={activeProject?.path}
+        onSelectProject={handleSelectProject}
+        onAddProject={handleAddProject}
+        onDeleteProject={handleDeleteProject}
+        onToggleGitHub={handleToggleGitHubPanel}
+        onToggleSettings={handleToggleSettingsPanel}
         activePanel={activePanel}
       />
       <UpdateBanner />
@@ -296,11 +326,13 @@ function App() {
               onAddTerminal={handleAddTerminal}
               onToggleYolo={() => {}}
               onKillAll={handleKillAll}
+              showYolo={false}
             />
-            <div data-testid="terminal-area" style={{ flex: 1, minHeight: 0 }}>
+            <div data-testid={TEST_IDS.shell.terminalArea} style={{ flex: 1, minHeight: 0 }}>
               <TerminalGrid
                 terminals={terminals}
                 activeProjectId={activeProjectId}
+                activeProjectName={activeProject?.name}
                 activeProjectPath={activeProject?.path}
                 activeTerminalId={activeTerminalId}
                 onTerminalClick={setActiveTerminal}
@@ -314,51 +346,31 @@ function App() {
         ) : (
           <WelcomeScreen onAddProject={handleAddProject} />
         )}
+
+        <SlidePanel
+          isOpen={activePanel === 'github'}
+          onClose={() => setActivePanel(null)}
+          variant="github"
+          title="GitHub"
+          description={activeProject ? 'Issues, pull requests, and repo status' : 'Connect a project to inspect repo state'}
+          testId={TEST_IDS.panel.github}
+        >
+          {activePanel === 'github' && <GitHubPanelContent projectPath={activeProject?.path} />}
+        </SlidePanel>
+
+        <SlidePanel
+          isOpen={activePanel === 'settings'}
+          onClose={handleCloseSettingsPanel}
+          title="Settings"
+          description="Workspace behavior, terminal preferences, notifications, and updates"
+          testId={TEST_IDS.panel.settings}
+          closeTestId={TEST_IDS.panel.settingsCloseButton}
+        >
+          <SettingsPanelContent onClose={handleCloseSettingsPanel} />
+        </SlidePanel>
       </div>
-      <ProjectBar
-        projects={projects}
-        activeProjectId={activeProjectId}
-        onSelectProject={handleSelectProject}
-        onAddProject={handleAddProject}
-        onDeleteProject={handleDeleteProject}
-      />
     </div>
   )
 }
 
 export default App
-
-function toGitHubUrl(remote: string): string | null {
-  const ssh = remote.match(/git@github\.com[:/](.+?)(?:\.git)?$/)
-  if (ssh) return `https://github.com/${ssh[1]}`
-  const https = remote.match(/(https?:\/\/github\.com\/.+?)(?:\.git)?$/)
-  if (https) return https[1]
-  return null
-}
-
-function GitHubHeaderExtra({ projectPath }: { projectPath?: string }) {
-  const [repoUrl, setRepoUrl] = useState<string | null>(null)
-  useEffect(() => {
-    if (!projectPath) { setRepoUrl(null); return }
-    api.git.status(projectPath).then(status => {
-      setRepoUrl(status?.remoteUrl ? toGitHubUrl(status.remoteUrl) : null)
-    }).catch(() => setRepoUrl(null))
-  }, [projectPath])
-  if (!repoUrl) return null
-  const label = repoUrl.match(/github\.com\/(.+)/)?.[1] ?? repoUrl
-  return (
-    <a
-      href={repoUrl}
-      onClick={e => { e.preventDefault(); api.app.openExternal(repoUrl) }}
-      title={repoUrl}
-      style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--mc-text-muted, #6e7681)', textDecoration: 'none', fontSize: 11, transition: 'color 0.15s' }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--mc-accent, #58a6ff)' }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--mc-text-muted, #6e7681)' }}
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-        <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-      </svg>
-      <span style={{ whiteSpace: 'nowrap' }}>{label}</span>
-    </a>
-  )
-}
