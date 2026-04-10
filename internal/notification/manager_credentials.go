@@ -75,6 +75,25 @@ func (m *Manager) TestDiscord(webhookURL string) error {
 	return n.Send("MultiHub test notification — connection successful!")
 }
 
+// GetTelegram returns the stored Telegram token and chatID (empty strings if not set).
+func (m *Manager) GetTelegram() (token, chatID string) {
+	token, _ = m.secureStore.Get("telegram-token")
+	chatID, _ = m.secureStore.Get("telegram-chat-id")
+	return
+}
+
+// SetActiveTerminal updates which terminal is currently active (for notification context).
+func (m *Manager) SetActiveTerminal(id string) {
+	// No-op: active terminal context is tracked per ProcessOutput call.
+	// Exposed for frontend compatibility.
+}
+
+// GetRemoteControlStatus returns the Telegram remote-control connection status.
+// Currently always "disconnected" — remote control via Telegram bot is not yet implemented.
+func (m *Manager) GetRemoteControlStatus() string {
+	return "disconnected"
+}
+
 // ── Internal ──────────────────────────────────────────────────────────────────
 
 // refreshNotifiers reinitialises Telegram and Discord from stored credentials.

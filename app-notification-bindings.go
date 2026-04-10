@@ -58,3 +58,20 @@ func (a *App) NotificationClearDiscord() error {
 func (a *App) NotificationSetWindowFocused(focused bool) {
 	a.notificationMgr.SetWindowFocused(focused)
 }
+
+// NotificationGetTelegram returns the stored Telegram bot token and chat ID (masked).
+func (a *App) NotificationGetTelegram() (map[string]interface{}, error) {
+	token, chatID := a.notificationMgr.GetTelegram()
+	return map[string]interface{}{"token": token, "chatId": chatID}, nil
+}
+
+// NotificationSetActiveTerminal tells the notification manager which terminal is active.
+func (a *App) NotificationSetActiveTerminal(id string) {
+	a.notificationMgr.SetActiveTerminal(id)
+}
+
+// NotificationGetRemoteControlStatus returns the Telegram remote-control connection state.
+// Returns one of: "disconnected", "connected", "reconnecting", "error".
+func (a *App) NotificationGetRemoteControlStatus() (string, error) {
+	return a.notificationMgr.GetRemoteControlStatus(), nil
+}
