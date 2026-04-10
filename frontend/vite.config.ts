@@ -14,4 +14,20 @@ export default defineConfig({
       '@shared': resolve(__dirname, 'src/shared'),
     },
   },
+  test: {
+    // Default environment; individual test files may override with @vitest-environment
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test-setup.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    environmentOptions: {
+      jsdom: { url: 'http://localhost' },
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/test-setup.ts'],
+    },
+  },
 })
