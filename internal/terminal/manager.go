@@ -38,10 +38,11 @@ type Manager struct {
 	mu              sync.RWMutex
 	appCtx          context.Context
 	terminals       map[string]*PTYProcess
-	titleIndex      map[string]string  // title → terminal UUID (for PtyCreate compat)
+	titleIndex      map[string]string     // title → terminal UUID (for PtyCreate compat)
 	exitedTerminals map[string]ghostEntry // ghost cache
 	nextTerminalNum int
 	systemSuspended bool
+	outputHook      func(terminalID, data string) // optional hook for notification pipeline
 }
 
 // NewManager creates a Manager. appCtx must be the Wails application context.
@@ -314,8 +315,17 @@ func (m *Manager) lookup(id string) *PTYProcess {
 	return m.terminals[id]
 }
 
+// SetOutputHook registers an optional callback invoked on every output chunk.
+// Used by the notification pipeline to detect task completion events without
+// creating an import cycle between terminal and notification packages.
+func (m *Manager) SetOutputHook(fn func(terminalID, data string)) {
+	m.mu.Lock()
+	m.outputHook = fn
+	m.mu.Unlock()
+}
+
 // handleOutput is called by the PTY read loop when output arrives.
-// It runs OSC parsing and emits title-change events on the manager side.
+// It runs OSC parsing, emits title-change events, and invokes the output hook.
 func (m *Manager) handleOutput(id, data string) {
 	p := m.lookup(id)
 	if p == nil {
@@ -329,6 +339,13 @@ func (m *Manager) handleOutput(id, data string) {
 			"terminalId": id,
 			"title":      newTitle,
 		})
+	}
+	// Fire notification hook (if registered) without blocking the read loop.
+	m.mu.RLock()
+	hook := m.outputHook
+	m.mu.RUnlock()
+	if hook != nil {
+		go hook(id, data)
 	}
 }
 
