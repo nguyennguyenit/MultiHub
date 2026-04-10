@@ -14,8 +14,23 @@ func hasGit() bool {
 	return err == nil
 }
 
+func runGit(t *testing.T, dir string, args ...string) string {
+	t.Helper()
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %v: %v\n%s", args, err, out)
+	}
+	return strings.TrimSpace(string(out))
+}
+
 // initRepo creates a temp dir with a bare git repo and initial commit.
 func initRepo(t *testing.T) string {
+	return initRepoWithDefaultBranch(t, "")
+}
+
+func initRepoWithDefaultBranch(t *testing.T, branch string) string {
 	t.Helper()
 	dir, err := os.MkdirTemp("", "multihub-git-*")
 	if err != nil {
@@ -23,21 +38,18 @@ func initRepo(t *testing.T) string {
 	}
 	t.Cleanup(func() { os.RemoveAll(dir) })
 
-	run := func(args ...string) {
-		cmd := exec.Command("git", args...)
-		cmd.Dir = dir
-		if out, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("git %v: %v\n%s", args, err, out)
-		}
+	initArgs := []string{"init"}
+	if branch != "" {
+		initArgs = append(initArgs, "-b", branch)
 	}
-	run("init")
-	run("config", "user.email", "test@test.com")
-	run("config", "user.name", "Test User")
+	runGit(t, dir, initArgs...)
+	runGit(t, dir, "config", "user.email", "test@test.com")
+	runGit(t, dir, "config", "user.name", "Test User")
 	// initial commit so HEAD resolves
 	f := filepath.Join(dir, "README.md")
 	os.WriteFile(f, []byte("# test\n"), 0644)
-	run("add", "README.md")
-	run("commit", "-m", "init")
+	runGit(t, dir, "add", "README.md")
+	runGit(t, dir, "commit", "-m", "init")
 	return dir
 }
 
@@ -151,6 +163,51 @@ func TestManager_FileStatus(t *testing.T) {
 	}
 }
 
+func TestManager_Status_WithUnsupportedRepoExtensionFallsBackToGitCLI(t *testing.T) {
+	if !hasGit() {
+		t.Skip("git not installed")
+	}
+	dir := initRepo(t)
+	runGit(t, dir, "config", "extensions.worktreeConfig", "true")
+
+	m := NewManager()
+
+	status, err := m.Status(dir)
+	if err != nil {
+		t.Fatalf("Status: %v", err)
+	}
+	if !status.IsRepo {
+		t.Fatal("expected repo with worktreeConfig extension to still be detected as a git repo")
+	}
+	if status.Branch == "" {
+		t.Fatal("expected branch to be populated when falling back to git CLI")
+	}
+
+	files, err := m.FileStatus(dir)
+	if err != nil {
+		t.Fatalf("FileStatus: %v", err)
+	}
+	if len(files) != 0 {
+		t.Fatalf("expected clean repo to have no changed files, got %+v", files)
+	}
+
+	branches, err := m.Branches(dir)
+	if err != nil {
+		t.Fatalf("Branches: %v", err)
+	}
+	if len(branches) == 0 {
+		t.Fatal("expected branches to be available when falling back to git CLI")
+	}
+
+	log, err := m.Log(dir, 5)
+	if err != nil {
+		t.Fatalf("Log: %v", err)
+	}
+	if len(log) == 0 {
+		t.Fatal("expected commit log to be available when falling back to git CLI")
+	}
+}
+
 // ── Branches ─────────────────────────────────────────────────────────────────
 
 func TestManager_Branches(t *testing.T) {
@@ -227,6 +284,38 @@ func TestManager_Diff(t *testing.T) {
 	}
 	if !strings.Contains(result.Diff, "@@") {
 		t.Errorf("expected unified diff markers in output: %q", result.Diff)
+	}
+}
+
+func TestManager_DiffBranch_ResolvesMissingBaseBranch(t *testing.T) {
+	if !hasGit() {
+		t.Skip("git not installed")
+	}
+	dir := initRepoWithDefaultBranch(t, "trunk")
+	runGit(t, dir, "checkout", "-b", "feature/no-main")
+	os.WriteFile(filepath.Join(dir, "feature.txt"), []byte("feature work\n"), 0644)
+	runGit(t, dir, "add", "feature.txt")
+	runGit(t, dir, "commit", "-m", "feature commit")
+
+	m := NewManager()
+	diff, err := m.DiffBranch(dir, "main")
+	if err != nil {
+		t.Fatalf("DiffBranch: %v", err)
+	}
+	if diff.BaseBranch != "trunk" {
+		t.Fatalf("expected missing base branch to resolve to trunk, got %q", diff.BaseBranch)
+	}
+	if diff.AheadBy == 0 {
+		t.Fatalf("expected feature branch to be ahead of %q", diff.BaseBranch)
+	}
+	found := false
+	for _, file := range diff.Files {
+		if file.Path == "feature.txt" && file.Status == "added" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected feature.txt to appear in diff, got %+v", diff.Files)
 	}
 }
 
