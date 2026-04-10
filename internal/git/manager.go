@@ -23,15 +23,15 @@ func (m *Manager) openRepo(cwd string) (*gogit.Repository, error) {
 func (m *Manager) Status(cwd string) (types.GitStatus, error) {
 	repo, err := m.openRepo(cwd)
 	if err != nil {
-		return types.GitStatus{IsRepo: false}, nil
+		return m.statusViaExec(cwd)
 	}
 	wt, err := repo.Worktree()
 	if err != nil {
-		return types.GitStatus{IsRepo: true}, err
+		return m.statusViaExec(cwd)
 	}
 	status, err := wt.Status()
 	if err != nil {
-		return types.GitStatus{IsRepo: true}, err
+		return m.statusViaExec(cwd)
 	}
 
 	result := types.GitStatus{IsRepo: true, IsDirty: !status.IsClean()}
@@ -65,15 +65,15 @@ func (m *Manager) Status(cwd string) (types.GitStatus, error) {
 func (m *Manager) FileStatus(cwd string) ([]types.GitFileStatus, error) {
 	repo, err := m.openRepo(cwd)
 	if err != nil {
-		return nil, nil
+		return m.fileStatusViaExec(cwd)
 	}
 	wt, err := repo.Worktree()
 	if err != nil {
-		return nil, err
+		return m.fileStatusViaExec(cwd)
 	}
 	status, err := wt.Status()
 	if err != nil {
-		return nil, err
+		return m.fileStatusViaExec(cwd)
 	}
 
 	var files []types.GitFileStatus
@@ -101,7 +101,7 @@ func (m *Manager) Init(cwd string) error {
 func (m *Manager) Branches(cwd string) ([]types.GitBranch, error) {
 	repo, err := m.openRepo(cwd)
 	if err != nil {
-		return nil, err
+		return m.branchesViaExec(cwd)
 	}
 	head, _ := repo.Head()
 	currentBranch := ""
@@ -112,7 +112,7 @@ func (m *Manager) Branches(cwd string) ([]types.GitBranch, error) {
 	var branches []types.GitBranch
 	branchIter, err := repo.Branches()
 	if err != nil {
-		return nil, err
+		return m.branchesViaExec(cwd)
 	}
 	_ = branchIter.ForEach(func(ref *plumbing.Reference) error {
 		name := ref.Name().Short()
@@ -151,14 +151,14 @@ func (m *Manager) Branches(cwd string) ([]types.GitBranch, error) {
 func (m *Manager) Log(cwd string, maxCount int) ([]types.GitLogEntry, error) {
 	repo, err := m.openRepo(cwd)
 	if err != nil {
-		return nil, err
+		return m.logViaExec(cwd, maxCount)
 	}
 	if maxCount <= 0 {
 		maxCount = 50
 	}
 	logIter, err := repo.Log(&gogit.LogOptions{Order: gogit.LogOrderCommitterTime})
 	if err != nil {
-		return nil, err
+		return m.logViaExec(cwd, maxCount)
 	}
 
 	var entries []types.GitLogEntry
