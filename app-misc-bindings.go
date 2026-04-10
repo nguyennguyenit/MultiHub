@@ -3,67 +3,103 @@ package main
 import (
 	"os"
 
+	internalproject "github.com/multihub/multihub/internal/project"
+	"github.com/multihub/multihub/internal/updater"
+	"github.com/multihub/multihub/pkg/types"
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// ── Settings bindings (stub – real impl in Phase 08) ─────────────────────────
+// ── Settings bindings ─────────────────────────────────────────────────────────
 
-// SettingsGet returns application settings.
-func (a *App) SettingsGet() (interface{}, error) { return nil, nil }
+// SettingsGet returns the current application settings.
+func (a *App) SettingsGet() (types.AppSettings, error) {
+	return a.settingsStore.Get(), nil
+}
 
-// SettingsSet persists application settings.
-func (a *App) SettingsSet(s map[string]interface{}) (interface{}, error) { return s, nil }
+// SettingsSet merges partial settings and persists them.
+func (a *App) SettingsSet(s map[string]interface{}) (types.AppSettings, error) {
+	return a.settingsStore.Set(s)
+}
 
-// SettingsReset resets application settings to defaults.
-func (a *App) SettingsReset() (interface{}, error) { return nil, nil }
+// SettingsReset resets application settings to factory defaults.
+func (a *App) SettingsReset() (types.AppSettings, error) {
+	return a.settingsStore.Reset()
+}
 
-// ── GitHub bindings (stub – real impl in Phase 09) ───────────────────────────
+// ── GitHub bindings ───────────────────────────────────────────────────────────
 
-// GitHubAuthStatus returns GitHub authentication status.
-func (a *App) GitHubAuthStatus() (interface{}, error) { return nil, nil }
+// GitHubAuthStatus returns GitHub CLI authentication state.
+func (a *App) GitHubAuthStatus() (types.GitHubAuth, error) {
+	return a.githubClient.AuthStatus()
+}
 
-// GitHubLogin initiates the GitHub OAuth flow.
-func (a *App) GitHubLogin() error { return nil }
+// GitHubLogin initiates the GitHub OAuth web flow.
+func (a *App) GitHubLogin() (map[string]interface{}, error) {
+	return a.githubClient.Login()
+}
 
-// GitHubLogout clears stored GitHub credentials.
-func (a *App) GitHubLogout() error { return nil }
+// GitHubLogout signs out of GitHub.
+func (a *App) GitHubLogout() (types.GitOperationResult, error) {
+	return a.githubClient.Logout()
+}
 
 // GitHubCreateRepo creates a new GitHub repository.
-func (a *App) GitHubCreateRepo(data map[string]interface{}) (interface{}, error) {
-	return nil, nil
+func (a *App) GitHubCreateRepo(name string, isPrivate bool, cwd string) (map[string]interface{}, error) {
+	return a.githubClient.CreateRepo(name, isPrivate, cwd)
 }
 
-// GitHubListIssues returns open issues for the given repository.
-func (a *App) GitHubListIssues(data map[string]interface{}) (interface{}, error) {
-	return nil, nil
+// GitHubListIssues returns open issues for the repository at projectPath.
+func (a *App) GitHubListIssues(projectPath, state string) (map[string]interface{}, error) {
+	return a.githubClient.ListIssues(projectPath, state)
 }
 
-// GitHubListPRs returns open pull requests for the given repository.
-func (a *App) GitHubListPRs(data map[string]interface{}) (interface{}, error) {
-	return nil, nil
+// GitHubListPRs returns pull requests for the repository at projectPath.
+func (a *App) GitHubListPRs(projectPath, state string) (map[string]interface{}, error) {
+	return a.githubClient.ListPRs(projectPath, state)
 }
 
-// ── Update bindings (stub – real impl in Phase 10) ───────────────────────────
+// ── Update bindings ───────────────────────────────────────────────────────────
 
 // UpdateGetState returns the current auto-update state.
-func (a *App) UpdateGetState() (interface{}, error) { return nil, nil }
+func (a *App) UpdateGetState() updater.UpdateState {
+	return a.updaterChecker.GetState()
+}
 
-// UpdateCheck checks for a new release.
-func (a *App) UpdateCheck() (interface{}, error) { return nil, nil }
+// UpdateCheck polls GitHub Releases for a newer version.
+func (a *App) UpdateCheck() (updater.UpdateState, error) {
+	return a.updaterChecker.Check()
+}
 
-// UpdateDownload starts downloading the available update.
-func (a *App) UpdateDownload() error { return nil }
+// UpdateDownload downloads the available update asset.
+func (a *App) UpdateDownload() error {
+	return a.updaterChecker.Download()
+}
 
-// UpdateInstall installs the downloaded update and restarts.
-func (a *App) UpdateInstall() error { return nil }
+// UpdateInstall launches the downloaded installer.
+func (a *App) UpdateInstall() error {
+	return a.updaterChecker.Install()
+}
 
-// ── Session bindings (stub) ───────────────────────────────────────────────────
+// ── Session bindings ──────────────────────────────────────────────────────────
 
-// SessionSave persists the current window and terminal state.
-func (a *App) SessionSave() error { return nil }
+// SessionSave persists the current terminal and window state.
+func (a *App) SessionSave() error {
+	if a.sessionStore == nil {
+		return nil
+	}
+	sessions := a.terminalMgr.GetSessions()
+	return a.sessionStore.Save(internalproject.AppSession{
+		Terminals: sessions,
+	})
+}
 
 // SessionRestore loads the last-saved session state.
-func (a *App) SessionRestore() (interface{}, error) { return nil, nil }
+func (a *App) SessionRestore() (*internalproject.AppSession, error) {
+	if a.sessionStore == nil {
+		return nil, nil
+	}
+	return a.sessionStore.Restore()
+}
 
 // ── Terminal additional bindings ──────────────────────────────────────────────
 
@@ -81,7 +117,15 @@ func (a *App) WindowGetState() (interface{}, error) {
 
 // ── App bindings ──────────────────────────────────────────────────────────────
 
-// AppGetPath returns common OS paths (home, appData, etc.).
+// AppGetVersion returns the application version string injected at build time.
+func (a *App) AppGetVersion() string {
+	if a.version == "" {
+		return "dev"
+	}
+	return a.version
+}
+
+// AppGetPath returns common OS paths (home, appData, temp).
 func (a *App) AppGetPath(name string) (string, error) {
 	switch name {
 	case "home":

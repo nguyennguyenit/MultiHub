@@ -23,6 +23,14 @@
         <string>true</string>
         <key>NSHumanReadableCopyright</key>
         <string>{{.Info.Copyright}}</string>
+        <key>NSAppleEventsUsageDescription</key>
+        <string>MultiHub needs to send Apple Events for notifications</string>
+        <key>NSDesktopFolderUsageDescription</key>
+        <string>MultiHub needs access to your Desktop to open project folders</string>
+        <key>NSDocumentsFolderUsageDescription</key>
+        <string>MultiHub needs access to your Documents to open project folders</string>
+        <key>NSDownloadsFolderUsageDescription</key>
+        <string>MultiHub needs access to your Downloads folder for updates</string>
         {{if .Info.FileAssociations}}
         <key>CFBundleDocumentTypes</key>
         <array>

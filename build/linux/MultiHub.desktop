@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MultiHub
+Exec=MultiHub
+Icon=multihub
+Type=Application
+Categories=Development;
+Comment=Desktop workspace for running AI coding agents in parallel
+Keywords=terminal;ai;claude;coding;development;
+StartupNotify=true

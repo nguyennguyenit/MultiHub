@@ -3,17 +3,34 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
+	internalgit "github.com/multihub/multihub/internal/git"
+	"github.com/multihub/multihub/internal/github"
+	"github.com/multihub/multihub/internal/notification"
+	"github.com/multihub/multihub/internal/project"
+	"github.com/multihub/multihub/internal/settings"
 	"github.com/multihub/multihub/internal/terminal"
+	"github.com/multihub/multihub/internal/updater"
 	"github.com/multihub/multihub/pkg/types"
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App is the Wails application struct. All exported methods are auto-bound to the frontend.
 type App struct {
-	ctx         context.Context
-	terminalMgr *terminal.Manager
+	ctx              context.Context
+	version          string
+	terminalMgr      *terminal.Manager
+	projectStore     *project.Store
+	sessionStore     *project.SessionStore
+	gitMgr           *internalgit.Manager
+	headWatcher      *internalgit.HeadWatcher
+	notificationMgr  *notification.Manager
+	settingsStore    *settings.Store
+	githubClient     *github.Client
+	updaterChecker   *updater.Checker
 }
 
 // NewApp creates a new App instance.
@@ -25,12 +42,80 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.terminalMgr = terminal.NewManager(ctx)
+
+	// Resolve platform data directory: ~/.config/MultiHub (or OS equivalent).
+	dataDir := appDataDir()
+	var err error
+	a.projectStore, err = project.NewStore(dataDir)
+	if err != nil {
+		// Non-fatal: fall back to in-memory state.
+		a.projectStore, _ = project.NewStore(os.TempDir())
+	}
+	a.sessionStore, err = project.NewSessionStore(dataDir)
+	if err != nil {
+		a.sessionStore, _ = project.NewSessionStore(os.TempDir())
+	}
+
+	a.gitMgr = internalgit.NewManager()
+	a.headWatcher = internalgit.NewHeadWatcher(func(projectPath string) {
+		wailsRuntime.EventsEmit(a.ctx, "git:branch-changed", projectPath)
+	})
+
+	// Phase 07: Notification System
+	a.notificationMgr = notification.NewManager(ctx, dataDir)
+	a.terminalMgr.SetOutputHook(func(id, data string) {
+		t := a.terminalMgr.Get(id)
+		if t != nil {
+			a.notificationMgr.ProcessOutput(id, data, *t)
+		} else {
+			a.notificationMgr.ProcessOutput(id, data, types.Terminal{ID: id})
+		}
+	})
+
+	// Phase 08: Settings Store
+	a.settingsStore, err = settings.NewStore(dataDir)
+	if err != nil {
+		a.settingsStore, _ = settings.NewStore(os.TempDir())
+	}
+
+	// Phase 09: GitHub Client
+	a.githubClient = github.NewClient()
+
+	// Phase 10: Auto-Update (check every 4 hours)
+	// Strip leading 'v' prefix if present (e.g. "v1.0.0" -> "1.0.0").
+	currentVer := a.version
+	if len(currentVer) > 0 && currentVer[0] == 'v' {
+		currentVer = currentVer[1:]
+	}
+	if currentVer == "" || currentVer == "dev" {
+		currentVer = "0.0.0"
+	}
+	a.updaterChecker = updater.NewChecker(ctx, "multihub", "multihub", currentVer, dataDir)
+	a.updaterChecker.StartAutoCheck(4 * time.Hour)
+}
+
+// appDataDir returns the platform-appropriate data directory for MultiHub.
+func appDataDir() string {
+	base, err := os.UserConfigDir()
+	if err != nil {
+		base = os.TempDir()
+	}
+	return filepath.Join(base, "MultiHub")
 }
 
 // shutdown is called when the app is closing.
 func (a *App) shutdown(_ context.Context) {
 	if a.terminalMgr != nil {
 		a.terminalMgr.DestroyAll()
+	}
+	if a.headWatcher != nil {
+		a.headWatcher.Destroy()
+	}
+	if a.notificationMgr != nil {
+		a.notificationMgr.Destroy()
+	}
+	if a.updaterChecker != nil {
+		a.updaterChecker.Stop()
 	}
 }
 
