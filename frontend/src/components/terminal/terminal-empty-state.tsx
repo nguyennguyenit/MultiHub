@@ -29,7 +29,7 @@ export function TerminalEmptyState({
       </div>
 
       {onAddTerminal && (
-        <button type="button" className="welcome-btn" onClick={onAddTerminal}>
+        <button type="button" className="welcome-btn" onClick={() => onAddTerminal()}>
           New Terminal
         </button>
       )}

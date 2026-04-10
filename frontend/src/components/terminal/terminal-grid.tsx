@@ -72,6 +72,22 @@ export const TerminalGrid = memo(function TerminalGrid({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  const resolvedActiveProjectId = useMemo(() => {
+    if (activeProjectId) {
+      return activeProjectId
+    }
+
+    const activeTerminal = activeTerminalId
+      ? terminals.find((terminal) => terminal.id === activeTerminalId)
+      : null
+
+    if (activeTerminal) {
+      return getProjectId(activeTerminal)
+    }
+
+    return terminals[0] ? getProjectId(terminals[0]) : null
+  }, [activeProjectId, activeTerminalId, terminals])
+
   /**
    * Groups terminals by project for stable rendering (single-parent pattern).
    * All project grids are rendered simultaneously with inactive projects hidden via CSS.
@@ -89,10 +105,10 @@ export const TerminalGrid = memo(function TerminalGrid({
     }
     return Array.from(groups.entries()).map(([projectId, terms]) => ({
       projectId,
-      isActive: projectId === activeProjectId,
+      isActive: projectId === resolvedActiveProjectId,
       terminals: terms
     }))
-  }, [terminals, activeProjectId])
+  }, [terminals, activeProjectId, resolvedActiveProjectId])
 
   // Get active project's terminals for grid layout calculation
   const activeGroup = projectGroups.find(g => g.isActive)

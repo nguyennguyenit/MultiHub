@@ -43,6 +43,7 @@ function App() {
 
   const projectSelectionRequestRef = useRef(0)
   const activeProject = projects.find(p => p.id === activeProjectId)
+  const showTerminalWorkspace = Boolean(activeProjectId || terminals.length > 0)
   const visibleTerminals = activeProjectId
     ? terminals.filter(t => t.projectId === activeProjectId)
     : terminals
@@ -103,27 +104,28 @@ function App() {
   }, [cancelSettings])
 
   const handleToggleGitHubPanel = useCallback(() => {
-    setActivePanel((prev) => {
-      if (prev === 'github') {
-        return null
-      }
-      if (prev === 'settings') {
-        cancelSettings()
-      }
-      return 'github'
-    })
-  }, [cancelSettings])
+    if (activePanel === 'github') {
+      setActivePanel(null)
+      return
+    }
+
+    if (activePanel === 'settings') {
+      cancelSettings()
+    }
+
+    setActivePanel('github')
+  }, [activePanel, cancelSettings])
 
   const handleToggleSettingsPanel = useCallback(() => {
-    setActivePanel((prev) => {
-      if (prev === 'settings') {
-        cancelSettings()
-        return null
-      }
-      cancelSettings()
-      return 'settings'
-    })
-  }, [cancelSettings])
+    cancelSettings()
+
+    if (activePanel === 'settings') {
+      setActivePanel(null)
+      return
+    }
+
+    setActivePanel('settings')
+  }, [activePanel, cancelSettings])
 
   const handleAddTerminal = useCallback(async (shell?: WindowsShell) => {
     const { terminals } = useAppStore.getState()
@@ -317,7 +319,7 @@ function App() {
       />
       <UpdateBanner />
       <div className="main-content">
-        {activeProjectId ? (
+        {showTerminalWorkspace ? (
           <div className="terminal-area">
             <TerminalActionBar
               terminalCount={visibleTerminals.length}
