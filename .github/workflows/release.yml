@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS (universal)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build macOS universal binary
+        run: |
+          wails build -platform darwin/universal \
+            -ldflags "-X main.version=${{ github.ref_name }} -s -w"
+
+      - name: Create DMG
+        run: |
+          npm install -g create-dmg
+          create-dmg build/bin/MultiHub.app build/bin/ || true
+          # Fallback: zip the .app if create-dmg fails (e.g. no code signing)
+          if [ ! -f build/bin/*.dmg ]; then
+            cd build/bin && zip -r "MultiHub-${{ github.ref_name }}-macOS-universal.zip" MultiHub.app
+          fi
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultiHub-macOS
+          path: |
+            build/bin/*.dmg
+            build/bin/*.zip
+
+  build-linux:
+    name: Build Linux (amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build Linux binary
+        run: |
+          wails build -platform linux/amd64 \
+            -ldflags "-X main.version=${{ github.ref_name }} -s -w"
+
+      - name: Package AppImage
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          # Prepare AppDir
+          mkdir -p AppDir/usr/share/applications
+          cp build/linux/MultiHub.desktop AppDir/usr/share/applications/
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir AppDir \
+            --executable build/bin/MultiHub \
+            --desktop-file build/linux/MultiHub.desktop \
+            --icon-file build/appicon.png \
+            --output appimage \
+            || true
+          # Fallback: tar the binary
+          if [ ! -f *.AppImage ]; then
+            tar czf "MultiHub-${{ github.ref_name }}-linux-amd64.tar.gz" -C build/bin MultiHub
+          fi
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultiHub-Linux
+          path: |
+            *.AppImage
+            *.tar.gz
+
+  build-windows:
+    name: Build Windows (amd64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build Windows binary with NSIS installer
+        run: |
+          wails build -platform windows/amd64 -nsis `
+            -ldflags "-X main.version=${{ github.ref_name }} -s -w"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultiHub-Windows
+          path: |
+            build/bin/*.exe
+            build/bin/*.nsis.exe
+
+  release:
+    name: Create GitHub Release
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            MultiHub-macOS/**
+            MultiHub-Linux/**
+            MultiHub-Windows/**
