@@ -153,8 +153,16 @@ func (m *Manager) Diff(cwd, file string, staged bool, oldFile string) types.GitD
 
 // DiffBranch returns stat-level diff between HEAD and the given base branch.
 func (m *Manager) DiffBranch(cwd, baseBranch string) (types.GitBranchDiff, error) {
-	result := types.GitBranchDiff{BaseBranch: baseBranch}
-	out, err := m.execGit(cwd, "diff", baseBranch+"...HEAD", "--name-status")
+	resolvedBase, err := m.resolveDiffBaseBranch(cwd, baseBranch)
+	result := types.GitBranchDiff{BaseBranch: resolvedBase}
+	if err != nil {
+		return result, err
+	}
+	if resolvedBase == "" {
+		return result, nil
+	}
+
+	out, err := m.execGit(cwd, "diff", resolvedBase+"...HEAD", "--name-status")
 	if err != nil {
 		return result, err
 	}
@@ -162,19 +170,19 @@ func (m *Manager) DiffBranch(cwd, baseBranch string) (types.GitBranchDiff, error
 		if line == "" {
 			continue
 		}
-		parts := strings.Fields(line)
+		parts := strings.Split(line, "\t")
 		if len(parts) < 2 {
 			continue
 		}
-		f := types.GitBranchDiffFile{Status: mapDiffStatus(parts[0]), Path: parts[1]}
-		if parts[0] == "R" && len(parts) >= 3 {
-			f.OldPath = parts[1]
-			f.Path = parts[2]
+		f := types.GitBranchDiffFile{Status: mapDiffStatus(parts[0]), Path: unquoteGitPath(parts[1])}
+		if strings.HasPrefix(parts[0], "R") && len(parts) >= 3 {
+			f.OldPath = unquoteGitPath(parts[1])
+			f.Path = unquoteGitPath(parts[2])
 		}
 		result.Files = append(result.Files, f)
 	}
 	// ahead/behind
-	ab, _ := m.execGit(cwd, "rev-list", "--left-right", "--count", baseBranch+"...HEAD")
+	ab, _ := m.execGit(cwd, "rev-list", "--left-right", "--count", resolvedBase+"...HEAD")
 	fields := strings.Fields(strings.TrimSpace(ab))
 	if len(fields) == 2 {
 		result.BehindBy, _ = strconv.Atoi(fields[0])
@@ -185,7 +193,15 @@ func (m *Manager) DiffBranch(cwd, baseBranch string) (types.GitBranchDiff, error
 
 // DiffAgainstBranch returns the diff of a specific file against a branch.
 func (m *Manager) DiffAgainstBranch(cwd, branch, file string) types.GitDiffResult {
-	out, err := m.execGit(cwd, "diff", branch+"...HEAD", "--", file)
+	resolvedBase, err := m.resolveDiffBaseBranch(cwd, branch)
+	if err != nil {
+		return types.GitDiffResult{Success: false, Error: err.Error()}
+	}
+	if resolvedBase == "" {
+		return types.GitDiffResult{Success: true, Diff: ""}
+	}
+
+	out, err := m.execGit(cwd, "diff", resolvedBase+"...HEAD", "--", file)
 	if err != nil {
 		return types.GitDiffResult{Success: false, Error: err.Error()}
 	}
