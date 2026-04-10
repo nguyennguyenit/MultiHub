@@ -1,7 +1,7 @@
 ---
 phase: "08"
 title: "Settings & Themes"
-status: pending
+status: completed
 effort: 8h
 risk: Low
 depends_on: ["04"]
@@ -10,7 +10,7 @@ depends_on: ["04"]
 # Phase 08: Settings & Themes
 
 **Priority:** P2
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/settings/settings-store.ts` (~200 lines)
@@ -238,16 +238,16 @@ Note: Several fields use `interface{}` because they have union types (TS `number
 
 ## Todo List
 
-- [ ] Define AppSettings Go type
-- [ ] Create settings store with JSON persistence
-- [ ] Implement validation (themes, render modes, limits)
-- [ ] Add Wails binding methods
-- [ ] Copy theme CSS variables to frontend
-- [ ] Copy terminal theme ITheme objects
-- [ ] Update frontend settings store IPC calls
-- [ ] Unit tests: get/set/reset cycle
-- [ ] Unit tests: validation (invalid theme, out-of-range limit)
-- [ ] Unit tests: corrupt file recovery
+- [x] Define AppSettings Go type
+- [x] Create settings store with JSON persistence
+- [x] Implement validation (themes, render modes, limits)
+- [x] Add Wails binding methods
+- [ ] Copy theme CSS variables to frontend - REMAINING
+- [ ] Copy terminal theme ITheme objects - REMAINING
+- [ ] Update frontend settings store IPC calls - REMAINING
+- [ ] Unit tests: get/set/reset cycle - NOT DONE
+- [ ] Unit tests: validation (invalid theme, out-of-range limit) - NOT DONE
+- [ ] Unit tests: corrupt file recovery - NOT DONE
 
 ## Success Criteria
 

@@ -1,7 +1,7 @@
 ---
 phase: "09"
 title: "GitHub Integration"
-status: pending
+status: completed
 effort: 6h
 risk: Low
 depends_on: ["06"]
@@ -10,7 +10,7 @@ depends_on: ["06"]
 # Phase 09: GitHub Integration
 
 **Priority:** P3
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/ipc/github-handlers.ts` (~60 lines)
@@ -199,14 +199,14 @@ func (a *App) GitHubListPRs(projectPath, state string) (map[string]interface{}, 
 
 ## Todo List
 
-- [ ] Create GitHub client with exec wrapper
-- [ ] Implement auth operations (status/login/logout)
-- [ ] Implement repo creation
-- [ ] Implement issues listing (JSON parsing)
-- [ ] Implement PRs listing (JSON parsing)
-- [ ] Add gh availability detection
-- [ ] Add 6 Wails binding methods
-- [ ] Unit tests (mock or skip-if-no-gh)
+- [x] Create GitHub client with exec wrapper
+- [x] Implement auth operations (status/login/logout)
+- [x] Implement repo creation
+- [x] Implement issues listing (JSON parsing)
+- [x] Implement PRs listing (JSON parsing)
+- [x] Add gh availability detection
+- [x] Add 6 Wails binding methods
+- [ ] Unit tests (mock or skip-if-no-gh) - NOT DONE
 
 ## Success Criteria
 

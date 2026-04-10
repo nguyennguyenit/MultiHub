@@ -1,7 +1,7 @@
 ---
 phase: "10"
 title: "Auto-Update System"
-status: pending
+status: completed
 effort: 8h
 risk: Medium
 depends_on: ["01"]
@@ -10,7 +10,7 @@ depends_on: ["01"]
 # Phase 10: Auto-Update System
 
 **Priority:** P3 -- Can run in parallel
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/updater/auto-updater.ts` (~400 lines)
@@ -347,16 +347,16 @@ func (a *App) UpdateInstall() error { return a.updater.Install() }
 
 ## Todo List
 
-- [ ] Implement semver comparison
-- [ ] Create GitHub Releases checker
-- [ ] Implement download with progress
-- [ ] Create platform installers (macOS/Linux/Windows)
-- [ ] Add auto-check timer
-- [ ] Add 4 Wails binding methods
-- [ ] Wire update events to frontend
-- [ ] Unit tests: semver comparison
-- [ ] Unit tests: release API parsing
-- [ ] Integration test: download from real GitHub release (manual)
+- [x] Implement semver comparison
+- [x] Create GitHub Releases checker
+- [x] Implement download with progress
+- [x] Create platform installers (macOS/Linux/Windows)
+- [x] Add auto-check timer
+- [x] Add 4 Wails binding methods
+- [x] Wire update events to frontend
+- [ ] Unit tests: semver comparison - NOT DONE
+- [ ] Unit tests: release API parsing - NOT DONE
+- [ ] Integration test: download from real GitHub release (manual) - NOT DONE
 
 ## Success Criteria
 

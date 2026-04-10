@@ -1,7 +1,7 @@
 ---
 phase: "05"
 title: "Project Management"
-status: pending
+status: completed
 effort: 6h
 risk: Low
 depends_on: ["01"]
@@ -10,7 +10,7 @@ depends_on: ["01"]
 # Phase 05: Project Management
 
 **Priority:** P2 -- Can run in parallel with terminal track
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/project/project-store.ts` (~130 lines)
@@ -273,15 +273,15 @@ func (a *App) SessionRestore() (*project.AppSession, error) {
 
 ## Todo List
 
-- [ ] Create project store with CRUD operations
-- [ ] Implement atomic JSON file writes (write-tmp-rename)
-- [ ] Create session store for terminal state persistence
-- [ ] Implement folder validation (exists, isEmpty, isGitRepo)
-- [ ] Add Wails binding methods to App struct
-- [ ] Wire store initialization in app startup
-- [ ] Unit tests: CRUD operations
-- [ ] Unit tests: atomic write (simulate crash during write)
-- [ ] Unit tests: corrupt JSON recovery
+- [x] Create project store with CRUD operations
+- [x] Implement atomic JSON file writes (write-tmp-rename)
+- [x] Create session store for terminal state persistence
+- [x] Implement folder validation (exists, isEmpty, isGitRepo)
+- [x] Add Wails binding methods to App struct
+- [x] Wire store initialization in app startup
+- [x] Unit tests: CRUD operations
+- [x] Unit tests: atomic write (simulate crash during write)
+- [x] Unit tests: corrupt JSON recovery
 
 ## Success Criteria
 

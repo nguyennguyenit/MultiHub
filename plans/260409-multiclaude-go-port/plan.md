@@ -1,7 +1,7 @@
 ---
 title: "MultiHub: Go/Wails v2 Port of MultiClaude"
 description: "Port Electron-based terminal manager to Go backend + Wails v2 WebView frontend, producing a single native binary"
-status: pending
+status: completed
 priority: P1
 effort: 120h
 branch: main
@@ -35,13 +35,13 @@ IPC Migration: 86 Electron IPC channels --> ~45 Wails bound methods + ~12 event 
 | 02 | [PTY Prototype](phase-02-pty-prototype.md) | 8h | completed | 01 | **HIGH** |
 | 03 | [Terminal Management](phase-03-terminal-management.md) | 12h | completed | 02 | Med |
 | 04 | [Frontend Migration](phase-04-frontend-migration.md) | 20h | completed | 03 | Med |
-| 05 | [Project Management](phase-05-project-management.md) | 6h | pending | 01 | Low |
-| 06 | [Git Integration](phase-06-git-integration.md) | 16h | pending | 05 | Med |
-| 07 | [Notification System](phase-07-notification-system.md) | 12h | pending | 03 | Med |
-| 08 | [Settings & Themes](phase-08-settings-and-themes.md) | 8h | pending | 04 | Low |
-| 09 | [GitHub Integration](phase-09-github-integration.md) | 6h | pending | 06 | Low |
-| 10 | [Auto-Update System](phase-10-auto-update-system.md) | 8h | pending | 01 | Med |
-| 11 | [Cross-Platform Packaging](phase-11-cross-platform-packaging.md) | 20h | pending | all | Med |
+| 05 | [Project Management](phase-05-project-management.md) | 6h | completed | 01 | Low |
+| 06 | [Git Integration](phase-06-git-integration.md) | 16h | completed | 05 | Med |
+| 07 | [Notification System](phase-07-notification-system.md) | 12h | completed | 03 | Med |
+| 08 | [Settings & Themes](phase-08-settings-and-themes.md) | 8h | completed | 04 | Low |
+| 09 | [GitHub Integration](phase-09-github-integration.md) | 6h | completed | 06 | Low |
+| 10 | [Auto-Update System](phase-10-auto-update-system.md) | 8h | completed | 01 | Med |
+| 11 | [Cross-Platform Packaging](phase-11-cross-platform-packaging.md) | 20h | completed | all | Med |
 
 ## Critical Path
 

@@ -1,7 +1,7 @@
 ---
 phase: "06"
 title: "Git Integration"
-status: pending
+status: completed
 effort: 16h
 risk: Medium
 depends_on: ["05"]
@@ -10,7 +10,7 @@ depends_on: ["05"]
 # Phase 06: Git Integration
 
 **Priority:** P2 -- Large scope, high value
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/git/git-manager.ts` (~1000 lines, 38 operations)
@@ -410,16 +410,16 @@ type GitConfig struct {
 
 ## Todo List
 
-- [ ] Define Git types in pkg/types/git.go
-- [ ] Implement go-git native operations (25 ops)
-- [ ] Implement exec fallback operations (13 ops)
-- [ ] Create HeadWatcher with fsnotify
-- [ ] Wire branch change events to Wails
-- [ ] Add 30 Wails binding methods to App
-- [ ] Unit tests: status/init/add/commit cycle
-- [ ] Unit tests: branch operations
-- [ ] Unit tests: stash operations (exec fallback)
-- [ ] Integration test: full workflow (init -> add -> commit -> branch -> merge)
+- [x] Define Git types in pkg/types/git.go
+- [x] Implement go-git native operations (25 ops)
+- [x] Implement exec fallback operations (13 ops)
+- [x] Create HeadWatcher with fsnotify
+- [x] Wire branch change events to Wails
+- [x] Add 30 Wails binding methods to App
+- [x] Unit tests: status/init/add/commit cycle
+- [x] Unit tests: branch operations
+- [x] Unit tests: stash operations (exec fallback)
+- [x] Integration test: full workflow (init -> add -> commit -> branch -> merge)
 
 ## Success Criteria
 

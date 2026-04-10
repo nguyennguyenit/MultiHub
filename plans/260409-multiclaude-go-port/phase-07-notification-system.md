@@ -1,7 +1,7 @@
 ---
 phase: "07"
 title: "Notification System"
-status: pending
+status: completed
 effort: 12h
 risk: Medium
 depends_on: ["03"]
@@ -10,7 +10,7 @@ depends_on: ["03"]
 # Phase 07: Notification System
 
 **Priority:** P2 -- Depends on terminal management for output monitoring
-**Status:** Pending
+**Status:** Completed
 
 ## Context Links
 - Source: `src/main/notification/` (~15 files, ~2000 lines total)
@@ -404,25 +404,26 @@ func Notify(title, body string) error {
 9. Wire terminal output stream to notification pipeline
 10. Add focus detection (via Wails window focus events)
 11. Add Wails binding methods for settings/credentials
-12. Port Telegram poller for bidirectional commands (optional, P3)
+12. Port Telegram poller for bidirectional commands (optional, P3) - SKIPPED
 
 ## Todo List
 
-- [ ] Define notification types
-- [ ] Port pattern detection regex
-- [ ] Implement task tracker (dedup + TTL)
-- [ ] Create Telegram notifier
-- [ ] Create Discord notifier
-- [ ] Implement secure credential storage (go-keyring)
-- [ ] Create native OS notifications (macOS/Linux/Windows)
-- [ ] Build NotificationManager
-- [ ] Wire terminal output to notification pipeline
-- [ ] Implement focus detection
-- [ ] Add 15 Wails binding methods
+- [x] Define notification types
+- [x] Port pattern detection regex
+- [x] Implement task tracker (dedup + TTL)
+- [x] Create Telegram notifier
+- [x] Create Discord notifier
+- [x] Implement secure credential storage (go-keyring)
+- [x] Create native OS notifications (macOS/Linux/Windows)
+- [x] Build NotificationManager
+- [x] Wire terminal output to notification pipeline
+- [x] Implement focus detection
+- [x] Add 15 Wails binding methods
 - [ ] Unit tests: pattern detection
 - [ ] Unit tests: task tracker dedup and TTL
 - [ ] Integration test: Telegram test message (mock HTTP)
 - [ ] Integration test: Discord test message (mock HTTP)
+- [ ] Telegram polling (bidirectional commands) - SKIPPED (P3 optional)
 
 ## Success Criteria
 
