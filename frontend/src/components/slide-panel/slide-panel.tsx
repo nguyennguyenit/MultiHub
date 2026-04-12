@@ -70,6 +70,7 @@ export function SlidePanel({
           </div>
         )}
         <button
+          type="button"
           className="slide-panel-close"
           onClick={onClose}
           title="Close (Esc)"

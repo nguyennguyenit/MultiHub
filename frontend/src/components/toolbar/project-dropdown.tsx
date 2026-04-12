@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { TEST_IDS } from '@shared/constants'
+import { TEST_IDS, getProjectDropdownItemTestId } from '@shared/constants'
 import type { Project } from '@shared/types'
 
 interface ProjectDropdownProps {
@@ -97,7 +97,7 @@ export function ProjectDropdown({
             <div
               key={project.id}
               className={`project-dropdown-item${activeProjectId === project.id ? ' active' : ''}`}
-              data-testid={`project-dropdown-item-${project.id}`}
+              data-testid={getProjectDropdownItemTestId(project.id)}
             >
               <button
                 type="button"

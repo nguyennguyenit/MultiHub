@@ -44,6 +44,8 @@
 .slide-panel {
   position: absolute;
   z-index: 20;
+  display: flex;
+  flex-direction: column;
   top: 12px;
   right: 12px;
   bottom: 12px;
@@ -54,6 +56,14 @@
   box-shadow: 0 28px 56px rgba(0, 0, 0, 0.38);
   backdrop-filter: blur(18px);
   overflow: hidden;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slide-panel-open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .slide-panel-github.slide-panel-right {
@@ -62,6 +72,10 @@
 
 .slide-panel-right {
   transform: translateX(calc(100% + 28px));
+}
+
+.slide-panel-right.slide-panel-open {
+  transform: translateX(0);
 }
 
 .slide-panel-bottom {
@@ -73,13 +87,20 @@
   transform: translateY(calc(100% + 28px));
 }
 
+.slide-panel-bottom.slide-panel-open {
+  transform: translateY(0);
+}
+
 .slide-panel-header {
+  display: flex;
+  justify-content: space-between;
   min-height: 64px;
   padding: 16px 18px;
   align-items: flex-start;
   gap: 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
   background: color-mix(in srgb, var(--bg-primary) 42%, transparent);
+  flex-shrink: 0;
 }
 
 .slide-panel-heading {
@@ -112,10 +133,24 @@
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
   background: color-mix(in srgb, var(--bg-primary) 62%, transparent);
+  color: var(--text-primary);
+  opacity: 1;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: opacity var(--transition-fast);
+  font-family: inherit;
+}
+
+.slide-panel-close:hover {
   opacity: 1;
 }
 
 .slide-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: transparent;
 }

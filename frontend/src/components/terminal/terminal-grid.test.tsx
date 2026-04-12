@@ -4,7 +4,19 @@ import { TEST_IDS } from '@shared/constants'
 import type { Terminal } from '@shared/types'
 
 vi.mock('./terminal-pane', () => ({
-  TerminalPane: ({ title }: { title: string }) => <div>{title}</div>,
+  TerminalPane: ({
+    title,
+    terminalId,
+    hidden,
+  }: {
+    title: string
+    terminalId: string
+    hidden: boolean
+  }) => (
+    <div data-testid={`terminal-pane-${terminalId}`} data-hidden={String(hidden)}>
+      {title}
+    </div>
+  ),
 }))
 
 vi.mock('../../hooks/use-terminal-resize', () => ({
@@ -28,6 +40,38 @@ function createTerminal(overrides: Partial<Terminal> = {}): Terminal {
 }
 
 describe('TerminalGrid', () => {
+  test('keeps inactive project grids mounted but hidden to preserve terminal state', () => {
+    render(
+      <TerminalGrid
+        terminals={[
+          createTerminal({ id: 'terminal-1', title: 'Alpha Terminal', projectId: 'project-a' }),
+          createTerminal({ id: 'terminal-2', title: 'Beta Terminal', projectId: 'project-b' }),
+        ]}
+        activeProjectId="project-a"
+        activeTerminalId="terminal-1"
+        onTerminalClick={() => {}}
+      />
+    )
+
+    expect(screen.getByRole('region', {
+      name: 'Terminal grid for project project-a',
+    })).toHaveStyle({ visibility: 'visible' })
+
+    const inactiveRegion = screen.getAllByRole('region', { hidden: true }).find(
+      (region) => region.getAttribute('aria-label') === 'Terminal grid for project project-b'
+    )
+
+    expect(inactiveRegion).toBeDefined()
+
+    if (!inactiveRegion) {
+      throw new Error('Expected inactive project region to stay mounted')
+    }
+
+    expect(inactiveRegion).toHaveStyle({ visibility: 'hidden' })
+
+    expect(screen.getByTestId('terminal-pane-terminal-2')).toHaveAttribute('data-hidden', 'true')
+  })
+
   test('keeps unscoped terminals visible when no project is active', () => {
     render(
       <TerminalGrid

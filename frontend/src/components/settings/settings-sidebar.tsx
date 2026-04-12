@@ -1,3 +1,4 @@
+import { TEST_IDS, getSettingsTabTestId } from '@shared/constants'
 import { useUpdateStore } from '../../stores'
 
 export type SettingsTab = 'appearance' | 'terminals' | 'notifications' | 'updates'
@@ -39,7 +40,10 @@ export function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps
   const hasUpdate = updateState.status === 'available' || updateState.status === 'ready'
 
   return (
-    <div data-testid="settings-sidebar" className="w-60 border-r border-[var(--mc-border)] py-4 px-3 flex-shrink-0 flex flex-col">
+    <div
+      data-testid={TEST_IDS.panel.settingsSidebar}
+      className="w-60 border-r border-[var(--mc-border)] py-4 px-3 flex-shrink-0 flex flex-col"
+    >
       {/* Section Header */}
       <div className="px-3 mb-4">
         <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'var(--mc-text-muted)' }}>
@@ -54,7 +58,7 @@ export function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps
           return (
             <button
               key={tab.id}
-              data-testid={`settings-tab-${tab.id}`}
+              data-testid={getSettingsTabTestId(tab.id)}
               onClick={() => onTabChange(tab.id)}
               className={`
                 w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left relative

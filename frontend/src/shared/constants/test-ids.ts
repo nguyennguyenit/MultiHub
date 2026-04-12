@@ -1,3 +1,6 @@
+const PROJECT_DROPDOWN_ITEM_PREFIX = 'project-dropdown-item'
+const SETTINGS_TAB_PREFIX = 'settings-tab'
+
 export const TEST_IDS = {
   shell: {
     toolbar: 'app-toolbar',
@@ -9,6 +12,12 @@ export const TEST_IDS = {
     settingsButton: 'settings-button',
     terminalArea: 'terminal-area',
     terminalGrid: 'terminal-grid',
+  },
+  palette: {
+    root: 'quick-switcher-root',
+    input: 'quick-switcher-input',
+    list: 'quick-switcher-list',
+    emptyState: 'quick-switcher-empty-state',
   },
   emptyState: {
     project: 'project-empty-state',
@@ -36,8 +45,22 @@ export const TEST_IDS = {
     githubTabPanelHistory: 'github-panel-tabpanel-history',
     githubTabPanelGitHub: 'github-panel-tabpanel-github',
     settings: 'settings-panel',
+    settingsSidebar: 'settings-sidebar',
+    settingsContent: 'settings-panel-content',
+    settingsTabAppearance: `${SETTINGS_TAB_PREFIX}-appearance`,
+    settingsTabTerminals: `${SETTINGS_TAB_PREFIX}-terminals`,
+    settingsTabNotifications: `${SETTINGS_TAB_PREFIX}-notifications`,
+    settingsTabUpdates: `${SETTINGS_TAB_PREFIX}-updates`,
     settingsCloseButton: 'settings-close-button',
     settingsCancelButton: 'settings-cancel-button',
     settingsSaveButton: 'settings-save-button',
   },
 } as const
+
+export function getProjectDropdownItemTestId(projectId: string): string {
+  return `${PROJECT_DROPDOWN_ITEM_PREFIX}-${projectId}`
+}
+
+export function getSettingsTabTestId(tabId: string): string {
+  return `${SETTINGS_TAB_PREFIX}-${tabId}`
+}

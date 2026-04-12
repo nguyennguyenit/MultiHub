@@ -1,21 +1,41 @@
 :root {
-  --toolbar-height: 48px;
+  --toolbar-height: 44px;
   --panel-width: clamp(420px, 34vw, 560px);
   --github-panel-width: clamp(460px, 38vw, 620px);
 }
 
 .toolbar {
+  display: flex;
+  align-items: center;
   height: var(--toolbar-height);
-  gap: 14px;
-  padding: 0 14px;
+  gap: 10px;
+  padding: 0 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), var(--bg-secondary));
   backdrop-filter: blur(18px);
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.toolbar-drag {
+  position: absolute;
+  inset: 0;
+  -webkit-app-region: drag;
 }
 
 .toolbar-group {
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 1;
+}
+
+.toolbar-group-left {
+  transition: padding-left var(--transition-fast);
 }
 
 .toolbar-group-center {
@@ -28,37 +48,45 @@
 }
 
 .toolbar-brand {
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
 }
 
 .toolbar-brand-logo {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  flex-shrink: 0;
 }
 
 .toolbar-brand-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  opacity: 1;
-  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  opacity: 0.9;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .toolbar-project-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
 .toolbar-add-project {
-  height: 36px;
-  padding: 0 14px;
+  height: 32px;
+  padding: 0 12px;
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
@@ -75,25 +103,26 @@
   flex-direction: column;
   justify-content: center;
   min-width: 0;
-  padding: 0 14px;
-  height: 36px;
-  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+  gap: 2px;
+  padding: 0 8px;
+  height: 32px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .toolbar-context-label {
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1.1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .toolbar-context-value {
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -102,41 +131,51 @@
 .toolbar-terminal-summary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-primary) 44%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 7%, var(--border));
 }
 
 .toolbar-terminal-summary-label {
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
 }
 
 .toolbar-terminal-summary-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .toolbar-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 8%, var(--border));
   background: color-mix(in srgb, var(--bg-primary) 76%, transparent);
+  color: var(--text-primary);
   opacity: 0.9;
+  cursor: pointer;
+  position: relative;
+  transition: opacity var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .toolbar-btn:hover {
+  opacity: 0.8;
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .toolbar-btn.active {
+  opacity: 1;
   border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
   background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
@@ -145,22 +184,82 @@
   display: none;
 }
 
+.toolbar-btn.highlight {
+  color: var(--accent);
+}
+
+.toolbar-btn-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 14px;
+  padding: 1px 3px;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--bg-primary);
+  font-size: 9px;
+  line-height: 1;
+  text-align: center;
+  pointer-events: none;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.window-control-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.window-control-btn:hover {
+  background: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  color: var(--text-primary);
+}
+
+.window-control-close:hover {
+  background: rgba(239, 68, 68, 0.8);
+  color: white;
+}
+
 .project-dropdown {
   position: relative;
-  min-width: 260px;
-  max-width: 320px;
+  min-width: 240px;
+  max-width: 300px;
 }
 
 .project-dropdown-trigger {
   width: 100%;
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 12px;
+  gap: 10px;
+  padding: 0 10px;
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-  border-radius: 12px;
+  border-radius: 10px;
   background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
   color: var(--text-primary);
   cursor: pointer;
@@ -184,12 +283,12 @@
 }
 
 .project-dropdown-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .project-dropdown-meta {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
 }
 
@@ -200,11 +299,11 @@
 
 .project-dropdown-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 8px);
   left: 0;
   width: min(360px, calc(100vw - 48px));
-  padding: 8px;
-  border-radius: 18px;
+  padding: 6px;
+  border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
   background: color-mix(in srgb, var(--bg-secondary) 92%, black 8%);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
@@ -212,25 +311,25 @@
 }
 
 .project-dropdown-empty {
-  padding: 14px;
-  font-size: 12px;
+  padding: 12px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
 .project-dropdown-item {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
 }
 
 .project-dropdown-item-btn {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 8px 10px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
@@ -242,15 +341,15 @@
 }
 
 .project-dropdown-shortcut {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -264,12 +363,12 @@
 }
 
 .project-dropdown-item-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .project-dropdown-item-path {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
 }
 
@@ -281,18 +380,18 @@
 }
 
 .project-dropdown-delete {
-  width: 34px;
+  width: 30px;
   background: transparent;
   color: var(--text-muted);
 }
 
 .project-dropdown-add {
   width: 100%;
-  margin-top: 6px;
-  padding: 11px 12px;
+  margin-top: 4px;
+  padding: 9px 10px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 

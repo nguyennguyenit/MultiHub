@@ -37,7 +37,10 @@ export function SettingsPanelContent({ onClose }: SettingsPanelContentProps) {
     <div className="settings-panel-shell">
       <div className="settings-panel-layout">
         <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="settings-panel-content">
+        <div
+          className="settings-panel-content"
+          data-testid={TEST_IDS.panel.settingsContent}
+        >
           {activeTab === 'appearance' && <ThemeSelector />}
           {activeTab === 'terminals' && <TerminalSettings />}
           {activeTab === 'notifications' && <NotificationSettings />}
