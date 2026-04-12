@@ -113,10 +113,10 @@
 
 ## Todo List
 
-- [ ] Choose canonical shell token owners
-- [ ] Preserve alias bridge
-- [ ] Remove duplicate live definitions
-- [ ] Verify stable shell geometry
+- [x] Choose canonical shell token owners
+- [x] Preserve alias bridge
+- [x] Remove duplicate live definitions
+- [x] Verify stable shell geometry
 
 ## Success Criteria
 
@@ -136,4 +136,4 @@
 
 ## Next Steps
 
-- Start Phase 03 only after shell frame ownership is stable
+- Completed; shell frame ownership landed.

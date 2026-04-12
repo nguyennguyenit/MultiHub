@@ -167,6 +167,13 @@ All 11 phases of the Electron-to-Go port are complete. MultiHub is now a single 
 - Verified: Vitest 30/30; frontend build pass; Playwright targeted smoke 5/5 against `wails dev`.
 - Docs impact: minor; roadmap/changelog updated.
 
+### 🎛️ Shell-First Warp Refactor
+- Densified the terminal workspace by moving pane chrome, action-bar, empty-state, and welcome-surface ownership into `workspace.css`, reducing shell framing, and preserving the mounted hidden-project terminal strategy.
+- Restyled the shared drawer shell so GitHub and Settings read as attached right-side utility drawers while keeping Escape close, settings cancel/reset, and GitHub tab lifecycles intact.
+- Added a lightweight `Cmd/Ctrl+K` quick switcher for projects, terminals, drawers, and core actions, with keyboard filtering, focus restoration on dismiss, and targeted test anchors.
+- Removed proven-unused legacy shell code by deleting `frontend/src/components/toolbar/project-bar.tsx`, `frontend/src/components/settings/settings-modal.tsx`, and the orphaned project-bar CSS/export paths.
+- Verified: Vitest 57/57; frontend build pass; Playwright shell smoke 8/8 (`palette`, `terminal`, `projects`, `settings`) against `wails dev`.
+
 ### ⏭️ Known Limitations
 
 **Not Ported (v1.0 scope):**

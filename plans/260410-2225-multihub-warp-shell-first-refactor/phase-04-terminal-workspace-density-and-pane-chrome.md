@@ -15,7 +15,7 @@
 ## Overview
 
 - Priority: P1
-- Current status: pending
+- Current status: completed
 - Brief: make terminal space dominant and turn the current pane “tab bar” into tighter pane chrome
 
 ## Key Insights
@@ -131,10 +131,10 @@
 
 ## Todo List
 
-- [ ] Protect terminal grouping and empty states with tests
-- [ ] Tighten pane chrome
-- [ ] Reduce action-bar prominence
-- [ ] Preserve terminal state retention
+- [x] Protect terminal grouping and empty states with tests
+- [x] Tighten pane chrome
+- [x] Reduce action-bar prominence
+- [x] Preserve terminal state retention
 
 ## Success Criteria
 
@@ -155,4 +155,4 @@
 
 ## Next Steps
 
-- Move to Phase 05 after workspace density and state retention are stable
+- Completed; terminal density refactor landed.

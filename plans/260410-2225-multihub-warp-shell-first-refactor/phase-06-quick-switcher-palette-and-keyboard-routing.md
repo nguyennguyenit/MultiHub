@@ -13,7 +13,7 @@
 ## Overview
 
 - Priority: P1
-- Current status: pending
+- Current status: completed
 - Brief: add a lightweight `Cmd/Ctrl+K` switcher for projects, terminals, drawers, and common actions
 
 ## Key Insights
@@ -121,10 +121,10 @@
 
 ## Todo List
 
-- [ ] Add palette shortcut parsing
-- [ ] Build palette UI and tests
-- [ ] Wire project/terminal/drawer/common actions
-- [ ] Verify focus return and smoke path
+- [x] Add palette shortcut parsing
+- [x] Build palette UI and tests
+- [x] Wire project/terminal/drawer/common actions
+- [x] Verify focus return and smoke path
 
 ## Success Criteria
 
@@ -144,4 +144,4 @@
 
 ## Next Steps
 
-- Move to Phase 07 after palette flow is stable
+- Completed; palette and keyboard routing landed.

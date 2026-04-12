@@ -142,10 +142,10 @@
 
 ## Todo List
 
-- [ ] Add dropdown/settings shell tests
-- [ ] Stabilize project item and settings anchors
-- [ ] Lock hidden-while-mounted behavior
-- [ ] Lock baseline shortcuts
+- [x] Add dropdown/settings shell tests
+- [x] Stabilize project item and settings anchors
+- [x] Lock hidden-while-mounted behavior
+- [x] Lock baseline shortcuts
 
 ## Success Criteria
 
@@ -165,4 +165,4 @@
 
 ## Next Steps
 
-- Start Phase 02 only after shell contract tests are green
+- Completed; shell contract tests landed.

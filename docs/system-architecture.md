@@ -240,8 +240,9 @@ export const api = {
 **Migrated Components:**
 - **Stores:** `stores/` folder uses Zustand + Wails API adapter (no window.electron references)
 - **Hooks:** `hooks/` folder (use-terminal, use-git-panel, use-file-drop, use-keyboard-shortcuts)
-- **Components:** All terminal, git-panel, github-setup, github-view, settings, toolbar components migrated
+- **Components:** All terminal, git-panel, github-setup, github-view, settings, toolbar, and quick-switcher components migrated
 - **Terminal Pane:** Uses xterm.js v5 with FitAddon, receives output via Wails events
+- **Shell Styling:** `shell.css` owns the shell chrome and density tokens, `workspace.css` owns terminal/workspace density, and `panels.css` owns the attached drawer and palette surfaces
 
 **Dependencies (Phase 04):**
 - `zustand` v4.5+ → state management

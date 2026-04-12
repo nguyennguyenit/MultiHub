@@ -14,7 +14,7 @@
 ## Overview
 
 - Priority: P1
-- Current status: pending
+- Current status: completed
 - Brief: turn GitHub and Settings into visually docked utility drawers without changing their core behavior
 
 ## Key Insights
@@ -130,10 +130,10 @@
 
 ## Todo List
 
-- [ ] Protect drawer lifecycle behavior
-- [ ] Make drawers visually docked
-- [ ] Keep settings/GitHub semantics stable
-- [ ] Verify smoke coverage
+- [x] Protect drawer lifecycle behavior
+- [x] Make drawers visually docked
+- [x] Keep settings/GitHub semantics stable
+- [x] Verify smoke coverage
 
 ## Success Criteria
 
@@ -153,4 +153,4 @@
 
 ## Next Steps
 
-- Move to Phase 06 once drawers feel attached and tests prove lifecycle stability
+- Completed; drawer attachment and lifecycle checks landed.

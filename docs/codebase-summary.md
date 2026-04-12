@@ -1,6 +1,8 @@
 # MultiHub Codebase Summary
 
-**Last Updated:** 2026-04-10 (Phase 04 Complete)
+**Last Updated:** 2026-04-12 (Shell-First UI Refresh)
+
+**Note:** Legacy phase labels below are kept for provenance. The summary reflects the current repo state after the shell-first refactor.
 
 ## Directory Structure
 
@@ -53,7 +55,10 @@
 │   │   │   │   ├── terminal-settings.tsx
 │   │   │   │   ├── theme-selector.tsx
 │   │   │   │   └── ...
-│   │   │   ├── toolbar/                    # Top bar (5 files)
+│   │   │   ├── quick-switcher/             # Cmd/Ctrl+K palette
+│   │   │   │   ├── quick-switcher-dialog.tsx
+│   │   │   │   └── quick-switcher-dialog.test.tsx
+│   │   │   ├── toolbar/                    # Top bar controls
 │   │   │   │   ├── project-dropdown.tsx
 │   │   │   │   ├── window-controls.tsx
 │   │   │   │   └── ...
@@ -63,7 +68,10 @@
 │   │   │   ├── update-banner.tsx
 │   │   │   └── welcome-screen.tsx
 │   │   ├── styles/
-│   │   │   └── globals.css         # Tailwind + theme variables
+│   │   │   ├── globals.css         # Tailwind + theme variables
+│   │   │   ├── panels.css          # Drawer + palette surfaces
+│   │   │   ├── shell.css           # Top shell chrome + density tokens
+│   │   │   └── workspace.css       # Terminal workspace layout
 │   │   ├── utils/
 │   │   │   ├── shortcut-utils.ts
 │   │   │   ├── keyboard-enhancement-utils.ts
@@ -134,7 +142,7 @@
 4. **Components (`frontend/src/components/`)**
    - React components using hooks + stores
    - Terminal pane uses xterm.js v5 + FitAddon
-   - All other components unchanged from MultiClaude source
+   - Shell, drawer, and palette surfaces were refactored in the shell-first pass; the rest of the app still follows the MultiClaude-derived structure
 
 5. **Shared Types (`frontend/src/shared/`)**
    - Copied from MultiClaude source
@@ -211,13 +219,26 @@ go build .         # Native binary
 npm run build && go build .  # Full build process
 ```
 
-## Compile Status (Phase 04)
+### Shell-First UI Refresh
+- `shell.css` owns the shell frame, toolbar density, and shared chrome tokens.
+- `workspace.css` owns the terminal workspace density, hidden-project retention, and pane chrome.
+- `panels.css` owns the attached drawer shells and quick switcher palette surfaces.
+- `frontend/src/components/quick-switcher/` provides the `Cmd/Ctrl+K` palette for projects, terminals, drawers, and shell actions.
+- Verified: Vitest 57/57, frontend build pass, Playwright shell smoke 8/8 against `wails dev`.
+
+## Compile Status
 
 - **Go:** ✅ Clean build, no errors
 - **TypeScript:** ✅ Zero errors in `npm run build`
 - **Bindings:** ✅ 60+ methods compile cleanly (stubs)
-- **Frontend:** ✅ All components migrated, no window.electron references
+- **Frontend:** ✅ Shell-first workspace, drawers, and palette compile cleanly with no `window.electron` references
 - **API Adapter:** ✅ Full Electron API surface area covered
+
+## Codebase Versioning
+
+- **Codebase Version:** 1.0.0
+- **Last Update:** 2026-04-12
+- **Status:** Phase 11 Complete, Shell-First UI Refresh Included
 
 ## Migration Notes (Phase 04)
 
@@ -256,9 +277,3 @@ npm run build && go build .  # Full build process
 | Git Backend | `internal/git/*` | Backend | Stub (Phase 06) |
 | Settings Backend | `internal/settings/*` | Backend | Stub (Phase 08) |
 | Project Backend | `internal/project/*` | Backend | Stub (Phase 05) |
-
----
-
-**Codebase Version:** 0.3.0-alpha  
-**Last Update:** 2026-04-10  
-**Status:** Phase 04 Complete, Ready for Phase 05 (Project Management)

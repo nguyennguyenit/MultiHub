@@ -1,7 +1,7 @@
 ---
 title: "MultiHub Warp Shell-First Refactor"
 description: "Refactor the MultiHub shell into a denser Warp-inspired workspace with attached right drawers and a lightweight quick switcher while preserving current backend behavior."
-status: in_progress
+status: completed
 priority: P1
 effort: 28h
 branch: main
@@ -17,7 +17,7 @@ tdd: true
 
 ## Overview
 
-Approved direction: shell-first, cross-platform, right drawer, lightweight `Cmd/Ctrl+K` switcher in phase-1 release scope.
+Delivered shell-first, cross-platform, right drawer, lightweight `Cmd/Ctrl+K` switcher refactor in phase-1 release scope.
 Do not clone Warp blocks, editor, or agent model.
 Keep Wails bindings, Zustand stores, terminal engine, and current backend behavior intact.
 
@@ -61,10 +61,10 @@ No blocking plan dependencies detected.
 | 1 | [Regression Harness And Shell Contract](./phase-01-regression-harness-and-shell-contract.md) | Completed |
 | 2 | [Token Ownership And Shell Frame Stabilization](./phase-02-token-ownership-and-shell-frame-stabilization.md) | Completed |
 | 3 | [Compressed Top Shell And Project Navigation](./phase-03-compressed-top-shell-and-project-navigation.md) | Completed |
-| 4 | [Terminal Workspace Density And Pane Chrome](./phase-04-terminal-workspace-density-and-pane-chrome.md) | Pending |
-| 5 | [Attached Right Drawers And Panel Lifecycle](./phase-05-attached-right-drawers-and-panel-lifecycle.md) | Pending |
-| 6 | [Quick Switcher Palette And Keyboard Routing](./phase-06-quick-switcher-palette-and-keyboard-routing.md) | Pending |
-| 7 | [Cleanup Docs And Final Regression Lock](./phase-07-cleanup-docs-and-final-regression-lock.md) | Pending |
+| 4 | [Terminal Workspace Density And Pane Chrome](./phase-04-terminal-workspace-density-and-pane-chrome.md) | Completed |
+| 5 | [Attached Right Drawers And Panel Lifecycle](./phase-05-attached-right-drawers-and-panel-lifecycle.md) | Completed |
+| 6 | [Quick Switcher Palette And Keyboard Routing](./phase-06-quick-switcher-palette-and-keyboard-routing.md) | Completed |
+| 7 | [Cleanup Docs And Final Regression Lock](./phase-07-cleanup-docs-and-final-regression-lock.md) | Completed |
 
 ## TDD Strategy
 
@@ -83,5 +83,5 @@ No blocking plan dependencies detected.
 ## Docs Impact
 
 - Minor to medium.
-- Update roadmap/changelog after implementation.
+- Roadmap/changelog updated in phase 07.
 - No new evergreen design doc required unless the refactor establishes a durable shell-token contract worth documenting.

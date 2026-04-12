@@ -12,7 +12,7 @@
 ## Overview
 
 - Priority: P1
-- Current status: pending
+- Current status: completed
 - Brief: remove proven-dead shell leftovers, sync docs, and re-run the full regression set
 
 ## Key Insights
@@ -44,8 +44,8 @@
 
 ### Delete
 
-- `frontend/src/components/toolbar/project-bar.tsx` if confirmed dead
-- `frontend/src/components/settings/settings-modal.tsx` if confirmed dead
+- `frontend/src/components/toolbar/project-bar.tsx`
+- `frontend/src/components/settings/settings-modal.tsx`
 
 ### Possibly Modify
 
@@ -55,8 +55,8 @@
 
 | File | Action | Rough Size | Test Impact |
 |------|--------|-----------:|-------------|
-| `frontend/src/components/toolbar/project-bar.tsx` | delete? | existing | only if all references are gone |
-| `frontend/src/components/settings/settings-modal.tsx` | delete? | existing | only if no active usage remains |
+| `frontend/src/components/toolbar/project-bar.tsx` | delete | existing | removed after repo-wide audit |
+| `frontend/src/components/settings/settings-modal.tsx` | delete | existing | removed after repo-wide audit |
 | `frontend/src/components/toolbar/index.ts` | modify | existing | clean barrel exports |
 | `docs/development-roadmap.md` | modify | existing | milestone/progress update |
 | `docs/project-changelog.md` | modify | existing | record shipped shell refactor |
@@ -116,10 +116,10 @@
 
 ## Todo List
 
-- [ ] Audit dead shell files
-- [ ] Run full frontend verification
-- [ ] Update roadmap/changelog
-- [ ] Record residual risks if any
+- [x] Audit dead shell files
+- [x] Run full frontend verification
+- [x] Update roadmap/changelog
+- [x] Record residual risks if any
 
 ## Success Criteria
 
@@ -139,4 +139,4 @@
 
 ## Next Steps
 
-- Handoff to `/ck:cook` with this plan once review and validation are complete
+- Completed; implementation handoff and cleanup landed.

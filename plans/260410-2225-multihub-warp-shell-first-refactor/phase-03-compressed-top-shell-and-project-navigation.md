@@ -129,10 +129,10 @@
 
 ## Todo List
 
-- [ ] Compress top shell hierarchy
-- [ ] Preserve project navigation behavior
-- [ ] Verify platform spacing and drag regions
-- [ ] Keep smoke tests green
+- [x] Compress top shell hierarchy
+- [x] Preserve project navigation behavior
+- [x] Verify platform spacing and drag regions
+- [x] Keep smoke tests green
 
 ## Success Criteria
 
@@ -152,4 +152,4 @@
 
 ## Next Steps
 
-- Move to Phase 04 after header density is stable
+- Completed; compressed shell landed.
