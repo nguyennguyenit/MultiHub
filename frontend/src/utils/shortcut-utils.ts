@@ -12,6 +12,7 @@ export type GlobalShortcut =
   | { type: 'new-terminal' }
   | { type: 'close-terminal' }
   | { type: 'toggle-github-panel' }
+  | { type: 'toggle-quick-switcher' }
 
 function getDigitFromEvent(event: ShortcutEventLike): number | null {
   if (event.code && /^Digit[1-9]$/.test(event.code)) {
@@ -44,6 +45,8 @@ export function getGlobalShortcut(event: ShortcutEventLike): GlobalShortcut | nu
         return { type: 'close-terminal' }
       case 'KeyG':
         return { type: 'toggle-github-panel' }
+      case 'KeyK':
+        return { type: 'toggle-quick-switcher' }
     }
 
     switch (normalizedKey) {
@@ -54,6 +57,8 @@ export function getGlobalShortcut(event: ShortcutEventLike): GlobalShortcut | nu
         return { type: 'close-terminal' }
       case 'g':
         return { type: 'toggle-github-panel' }
+      case 'k':
+        return { type: 'toggle-quick-switcher' }
     }
   }
 

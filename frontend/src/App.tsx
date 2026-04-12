@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from 'react'
+import { useEffect, useCallback, useState, useRef, useMemo } from 'react'
 import { Toolbar } from './components/toolbar'
 import { UpdateBanner } from './components/update-banner'
 import { TerminalGrid, TerminalActionBar } from './components/terminal'
@@ -6,6 +6,7 @@ import { WelcomeScreen } from './components/welcome-screen'
 import { ToastContainer } from './components/toast-container'
 import { SettingsPanelContent } from './components/settings'
 import { SlidePanel } from './components/slide-panel'
+import { QuickSwitcherDialog, type QuickSwitcherItem } from './components/quick-switcher'
 import { GitHubPanelContent } from './components/github-view/github-view'
 import { GitInitDialog, GitHubConnectDialog } from './components/github-setup'
 import { useAppStore, useSettingsStore, useToastStore, setupNotificationListener, setupUpdateListener } from './stores'
@@ -31,6 +32,7 @@ function App() {
   const switchToProject = useAppStore((state) => state.switchToProject)
 
   const [activePanel, setActivePanel] = useState<string | null>(null)
+  const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false)
   const togglePanel = useCallback((panel: string) => {
     setActivePanel(prev => prev === panel ? null : panel)
   }, [])
@@ -76,11 +78,11 @@ function App() {
     removeProject(id)
   }, [terminals, removeProject, removeTerminal])
 
-  const handleSelectProject = useCallback(async (id: string | null) => {
+  const handleSelectProject = useCallback(async (id: string | null, terminalId?: string) => {
     const requestId = ++projectSelectionRequestRef.current
     if (!id) {
       setActiveProject(null)
-      setActiveTerminal(null)
+      setActiveTerminal(terminalId ?? null)
       return
     }
     const project = projects.find(p => p.id === id)
@@ -95,7 +97,7 @@ function App() {
       removeProject(id)
       return
     }
-    switchToProject(id)
+    switchToProject(id, terminalId)
   }, [projects, switchToProject, removeProject, setActiveProject, setActiveTerminal])
 
   const handleCloseSettingsPanel = useCallback(() => {
@@ -126,6 +128,10 @@ function App() {
 
     setActivePanel('settings')
   }, [activePanel, cancelSettings])
+
+  const handleToggleQuickSwitcher = useCallback(() => {
+    setIsQuickSwitcherOpen((current) => !current)
+  }, [])
 
   const handleAddTerminal = useCallback(async (shell?: WindowsShell) => {
     const { terminals } = useAppStore.getState()
@@ -213,8 +219,118 @@ function App() {
     onAddTerminal: handleAddTerminal,
     onCloseTerminal: handleCloseTerminal,
     onSelectProject: handleSelectProject,
-    onToggleGitHubPanel: handleToggleGitHubPanel
+    onToggleGitHubPanel: handleToggleGitHubPanel,
+    onToggleQuickSwitcher: handleToggleQuickSwitcher
   })
+
+  const projectNameById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project.name])),
+    [projects]
+  )
+
+  const quickSwitcherItems = useMemo<QuickSwitcherItem[]>(() => {
+    const projectItems = projects.map((project) => ({
+      id: `project-${project.id}`,
+      title: project.name,
+      subtitle: project.path,
+      group: 'Projects',
+      keywords: [project.path, project.id],
+    }))
+
+    const terminalItems = terminals.map((terminal) => ({
+      id: `terminal-${terminal.id}`,
+      title: terminal.title,
+      subtitle: terminal.projectId
+        ? `Terminal in ${projectNameById.get(terminal.projectId) ?? 'project'}`
+        : 'Unscoped terminal',
+      group: 'Terminals',
+      keywords: [terminal.id, terminal.projectId ?? '', projectNameById.get(terminal.projectId ?? '') ?? ''],
+    }))
+
+    const drawerItems = [
+      {
+        id: 'drawer-github',
+        title: activePanel === 'github' ? 'Close GitHub Drawer' : 'Open GitHub Drawer',
+        subtitle: 'Issues, pull requests, and repository status',
+        group: 'Drawers',
+        keywords: ['github', 'git', 'pull requests'],
+      },
+      {
+        id: 'drawer-settings',
+        title: activePanel === 'settings' ? 'Close Settings Drawer' : 'Open Settings Drawer',
+        subtitle: 'Workspace behavior and terminal preferences',
+        group: 'Drawers',
+        keywords: ['settings', 'preferences'],
+      },
+    ]
+
+    const actionItems = [
+      {
+        id: 'action-new-terminal',
+        title: 'New Terminal',
+        subtitle: activeProject ? `Create a terminal in ${activeProject.name}` : 'Create a new terminal',
+        group: 'Actions',
+        keywords: ['terminal', 'new', 'shell'],
+      },
+      {
+        id: 'action-open-project',
+        title: 'Open Project Folder',
+        subtitle: 'Add a project to the workbench',
+        group: 'Actions',
+        keywords: ['project', 'folder', 'open'],
+      },
+    ]
+
+    return [...projectItems, ...terminalItems, ...drawerItems, ...actionItems]
+  }, [activePanel, activeProject, projectNameById, projects, terminals])
+
+  const handleQuickSwitcherSelect = useCallback((item: QuickSwitcherItem) => {
+    if (item.id.startsWith('project-')) {
+      const projectId = item.id.replace('project-', '')
+      void handleSelectProject(projectId)
+      return
+    }
+
+    if (item.id.startsWith('terminal-')) {
+      const terminalId = item.id.replace('terminal-', '')
+      const terminal = terminals.find((candidate) => candidate.id === terminalId)
+      if (!terminal) return
+
+      if (terminal.projectId) {
+        void handleSelectProject(terminal.projectId, terminal.id)
+        return
+      }
+
+      setActiveProject(null)
+      setActiveTerminal(terminal.id)
+      return
+    }
+
+    switch (item.id) {
+      case 'drawer-github':
+        handleToggleGitHubPanel()
+        return
+      case 'drawer-settings':
+        handleToggleSettingsPanel()
+        return
+      case 'action-new-terminal':
+        void handleAddTerminal()
+        return
+      case 'action-open-project':
+        void handleAddProject()
+        return
+    }
+  }, [
+    handleAddProject,
+    handleAddTerminal,
+    handleSelectProject,
+    handleToggleGitHubPanel,
+    handleToggleSettingsPanel,
+    handleSelectProject,
+    setActiveProject,
+    setActiveTerminal,
+    terminals,
+  ])
 
   useEffect(() => { loadSettings(); detectWsl() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const cleanup = setupNotificationListener(); return cleanup }, [])
@@ -370,6 +486,13 @@ function App() {
         >
           <SettingsPanelContent onClose={handleCloseSettingsPanel} />
         </SlidePanel>
+
+        <QuickSwitcherDialog
+          isOpen={isQuickSwitcherOpen}
+          items={quickSwitcherItems}
+          onClose={() => setIsQuickSwitcherOpen(false)}
+          onSelect={handleQuickSwitcherSelect}
+        />
       </div>
     </div>
   )

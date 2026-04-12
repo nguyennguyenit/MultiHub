@@ -47,6 +47,12 @@ describe('shortcut-utils', () => {
     }))).toEqual({ type: 'toggle-github-panel' })
 
     expect(getGlobalShortcut(createShortcutEvent({
+      ctrlKey: true,
+      key: 'k',
+      code: 'KeyK',
+    }))).toEqual({ type: 'toggle-quick-switcher' })
+
+    expect(getGlobalShortcut(createShortcutEvent({
       metaKey: true,
       key: 'n',
       code: '',
@@ -58,6 +64,12 @@ describe('shortcut-utils', () => {
       ctrlKey: true,
       key: 'g',
       code: 'KeyG',
+    }))).toBe(true)
+
+    expect(shouldBypassXtermShortcut(createShortcutEvent({
+      metaKey: true,
+      key: 'k',
+      code: 'KeyK',
     }))).toBe(true)
 
     expect(shouldBypassXtermShortcut(createShortcutEvent({

@@ -23,7 +23,6 @@ interface SettingsState {
   hasUnsavedChanges: boolean
   wslInfo: WslInfo | null
   gitPanelOpen: boolean
-  settingsModalOpen: boolean
 
   setThemeMode: (mode: ThemeMode) => void
   setColorTheme: (theme: ColorTheme) => void
@@ -44,7 +43,6 @@ interface SettingsState {
 
   getTerminalLimitValue: () => number
   setGitPanelOpen: (open: boolean) => void
-  setSettingsModalOpen: (open: boolean) => void
   detectWsl: () => Promise<void>
 }
 
@@ -89,7 +87,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   hasUnsavedChanges: false,
   wslInfo: null,
   gitPanelOpen: false,
-  settingsModalOpen: false,
 
   setThemeMode: (mode) => {
     const pending = { ...get().pendingSettings, themeMode: mode }
@@ -200,14 +197,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   setGitPanelOpen: (open) => set({ gitPanelOpen: open }),
-
-  setSettingsModalOpen: (open) => {
-    if (open) {
-      set({ settingsModalOpen: true, pendingSettings: { ...get().savedSettings }, hasUnsavedChanges: false })
-    } else {
-      set({ settingsModalOpen: false })
-    }
-  },
 
   detectWsl: async () => {
     try {

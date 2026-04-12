@@ -3,6 +3,13 @@ import { TerminalGrid } from './terminal-grid'
 import { TEST_IDS } from '@shared/constants'
 import type { Terminal } from '@shared/types'
 
+const useTerminalResizeMock = vi.fn(() => ({
+  getRowFlex: () => 1,
+  getColFlex: () => 1,
+  startRowResize: vi.fn(),
+  startColResize: vi.fn(),
+}))
+
 vi.mock('./terminal-pane', () => ({
   TerminalPane: ({
     title,
@@ -20,12 +27,7 @@ vi.mock('./terminal-pane', () => ({
 }))
 
 vi.mock('../../hooks/use-terminal-resize', () => ({
-  useTerminalResize: () => ({
-    getRowFlex: () => 1,
-    getColFlex: () => 1,
-    startRowResize: vi.fn(),
-    startColResize: vi.fn(),
-  }),
+  useTerminalResize: (...args: unknown[]) => useTerminalResizeMock(...args),
 }))
 
 function createTerminal(overrides: Partial<Terminal> = {}): Terminal {
@@ -40,6 +42,10 @@ function createTerminal(overrides: Partial<Terminal> = {}): Terminal {
 }
 
 describe('TerminalGrid', () => {
+  beforeEach(() => {
+    useTerminalResizeMock.mockClear()
+  })
+
   test('keeps inactive project grids mounted but hidden to preserve terminal state', () => {
     render(
       <TerminalGrid
@@ -70,6 +76,37 @@ describe('TerminalGrid', () => {
     expect(inactiveRegion).toHaveStyle({ visibility: 'hidden' })
 
     expect(screen.getByTestId('terminal-pane-terminal-2')).toHaveAttribute('data-hidden', 'true')
+  })
+
+  test('falls back to the active terminal project when no project is selected', () => {
+    render(
+      <TerminalGrid
+        terminals={[
+          createTerminal({ id: 'terminal-1', title: 'Alpha Terminal', projectId: 'project-a' }),
+          createTerminal({ id: 'terminal-2', title: 'Beta Terminal', projectId: 'project-b' }),
+        ]}
+        activeProjectId={null}
+        activeTerminalId="terminal-2"
+        onTerminalClick={() => {}}
+      />
+    )
+
+    const projectARegion = screen.getAllByRole('region', { hidden: true }).find(
+      (region) => region.getAttribute('aria-label') === 'Terminal grid for project project-a'
+    )
+    const projectBRegion = screen.getByRole('region', {
+      name: 'Terminal grid for project project-b',
+    })
+
+    expect(projectBRegion).toHaveStyle({ visibility: 'visible' })
+    expect(projectARegion).toHaveStyle({ visibility: 'hidden' })
+    expect(screen.getByTestId('terminal-pane-terminal-2')).toHaveAttribute('data-hidden', 'false')
+    expect(useTerminalResizeMock).toHaveBeenCalledWith(
+      'project-b',
+      expect.any(Number),
+      expect.any(Array),
+      expect.any(Object)
+    )
   })
 
   test('keeps unscoped terminals visible when no project is active', () => {

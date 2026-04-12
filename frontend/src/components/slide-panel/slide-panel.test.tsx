@@ -12,6 +12,9 @@ describe('SlidePanel', () => {
 
     const panel = screen.getByTestId('settings-panel-test')
     expect(panel).toHaveStyle({ visibility: 'hidden' })
+    expect(panel).toHaveAttribute('data-panel-state', 'closed')
+    expect(panel).toHaveAttribute('data-panel-side', 'right')
+    expect(panel).toHaveAttribute('data-panel-attached', 'true')
     expect(screen.getByText('panel body')).toBeInTheDocument()
   })
 
@@ -24,9 +27,13 @@ describe('SlidePanel', () => {
 
     const panel = screen.getByTestId('github-panel-test')
     expect(panel).toHaveAttribute('data-panel-variant', 'github')
+    expect(panel).toHaveAttribute('data-panel-state', 'open')
+    expect(panel).toHaveAttribute('data-panel-side', 'right')
+    expect(panel).toHaveAttribute('data-panel-attached', 'true')
     expect(panel.className).toContain('slide-panel-github')
     expect(panel).toHaveAttribute('role', 'dialog')
     expect(panel).toHaveAttribute('aria-label', 'GitHub')
+    expect(screen.getByRole('button', { name: 'Close GitHub panel' })).toBeInTheDocument()
   })
 
   test('closes on escape only while open', async () => {

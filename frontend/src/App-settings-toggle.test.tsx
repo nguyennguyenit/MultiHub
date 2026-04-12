@@ -141,7 +141,6 @@ describe('App settings toggle', () => {
       hasUnsavedChanges: false,
       wslInfo: null,
       gitPanelOpen: false,
-      settingsModalOpen: false,
     })
 
     useToastStore.setState({ toasts: [] })

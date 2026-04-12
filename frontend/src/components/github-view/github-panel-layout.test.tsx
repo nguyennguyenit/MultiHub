@@ -130,12 +130,16 @@ describe('GitHubPanelContent', () => {
   test('renders the repo summary shell and tab contract with changes active by default', () => {
     render(<GitHubPanelContent projectPath="/tmp/repo" />)
 
+    const shell = document.querySelector('.github-panel-shell')
+    expect(shell).not.toBeNull()
     expect(screen.getByTestId('github-panel-summary')).toBeInTheDocument()
     expect(screen.getByTestId('github-panel-tabs')).toBeInTheDocument()
     expect(screen.getByTestId('github-panel-tab-changes')).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByTestId('github-panel-tab-history')).toHaveAttribute('aria-selected', 'false')
     expect(screen.getByTestId('github-panel-tab-github')).toHaveAttribute('aria-selected', 'false')
     expect(screen.getByTestId('github-panel-tabpanel-changes')).toBeInTheDocument()
+    expect(shell).toContainElement(screen.getByTestId('github-panel-summary'))
+    expect(shell).toContainElement(screen.getByTestId('github-panel-tabs'))
   })
 
   test('switches between changes, history, and GitHub tabs', async () => {

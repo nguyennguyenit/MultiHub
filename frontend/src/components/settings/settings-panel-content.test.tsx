@@ -35,6 +35,9 @@ describe('SettingsPanelContent', () => {
 
     render(<SettingsPanelContent onClose={() => {}} />)
 
+    expect(document.querySelector('.settings-panel-shell')).not.toBeNull()
+    expect(document.querySelector('.settings-panel-layout')).not.toBeNull()
+    expect(document.querySelector('.settings-panel-footer')).not.toBeNull()
     expect(screen.getByTestId(TEST_IDS.panel.settingsSidebar)).toBeInTheDocument()
     expect(screen.getByTestId(TEST_IDS.panel.settingsContent)).toBeInTheDocument()
     expect(screen.getByTestId(TEST_IDS.panel.settingsTabAppearance)).toBeInTheDocument()
@@ -48,6 +51,8 @@ describe('SettingsPanelContent', () => {
     await user.click(screen.getByTestId(TEST_IDS.panel.settingsTabUpdates))
 
     expect(screen.getByTestId('update-settings-stub')).toBeInTheDocument()
+    expect(screen.getByTestId(TEST_IDS.panel.settingsCancelButton)).toBeInTheDocument()
+    expect(screen.getByTestId(TEST_IDS.panel.settingsSaveButton)).toBeDisabled()
   })
 
   test('cancels pending settings before closing the panel', async () => {

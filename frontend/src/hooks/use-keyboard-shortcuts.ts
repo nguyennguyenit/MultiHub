@@ -7,6 +7,7 @@ interface KeyboardShortcutsOptions {
   onCloseTerminal: () => void
   onSelectProject?: (id: string) => void
   onToggleGitHubPanel?: () => void
+  onToggleQuickSwitcher?: () => void
 }
 
 /**
@@ -20,7 +21,8 @@ export function useKeyboardShortcuts({
   onAddTerminal,
   onCloseTerminal,
   onSelectProject,
-  onToggleGitHubPanel
+  onToggleGitHubPanel,
+  onToggleQuickSwitcher
 }: KeyboardShortcutsOptions) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,10 +53,13 @@ export function useKeyboardShortcuts({
         case 'toggle-github-panel':
           onToggleGitHubPanel?.()
           return
+        case 'toggle-quick-switcher':
+          onToggleQuickSwitcher?.()
+          return
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onAddTerminal, onCloseTerminal, onSelectProject, onToggleGitHubPanel])
+  }, [onAddTerminal, onCloseTerminal, onSelectProject, onToggleGitHubPanel, onToggleQuickSwitcher])
 }

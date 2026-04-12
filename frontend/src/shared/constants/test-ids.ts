@@ -1,5 +1,6 @@
 const PROJECT_DROPDOWN_ITEM_PREFIX = 'project-dropdown-item'
 const SETTINGS_TAB_PREFIX = 'settings-tab'
+const QUICK_SWITCHER_ITEM_PREFIX = 'quick-switcher-item'
 
 export const TEST_IDS = {
   shell: {
@@ -63,4 +64,8 @@ export function getProjectDropdownItemTestId(projectId: string): string {
 
 export function getSettingsTabTestId(tabId: string): string {
   return `${SETTINGS_TAB_PREFIX}-${tabId}`
+}
+
+export function getQuickSwitcherItemTestId(itemId: string): string {
+  return `${QUICK_SWITCHER_ITEM_PREFIX}-${itemId}`
 }

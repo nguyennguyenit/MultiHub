@@ -1,7 +1,19 @@
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from './App'
 import { useAppStore, useSettingsStore, useToastStore } from './stores'
 import { TEST_IDS } from '@shared/constants'
+
+const {
+  useKeyboardShortcutsMock,
+  checkFolderMock,
+  deleteProjectMock,
+  projectListMock,
+} = vi.hoisted(() => ({
+  useKeyboardShortcutsMock: vi.fn(),
+  checkFolderMock: vi.fn().mockResolvedValue(true),
+  deleteProjectMock: vi.fn().mockResolvedValue(true),
+  projectListMock: vi.fn().mockResolvedValue([]),
+}))
 
 vi.mock('./components/toolbar', () => ({
   Toolbar: () => <div data-testid="toolbar-stub" />,
@@ -24,6 +36,31 @@ vi.mock('./components/toast-container', () => ({
   ToastContainer: () => null,
 }))
 
+vi.mock('./components/quick-switcher', () => ({
+  QuickSwitcherDialog: ({
+    isOpen,
+    onSelect,
+  }: {
+    isOpen: boolean
+    onSelect: (item: { id: string; title: string; subtitle: string; group: string }) => void
+  }) => (
+    isOpen ? (
+      <button
+        type="button"
+        data-testid="quick-switcher-terminal-select"
+        onClick={() => onSelect({
+          id: 'terminal-terminal-1',
+          title: 'Repo Terminal',
+          subtitle: 'Terminal in Missing Repo',
+          group: 'Terminals',
+        })}
+      >
+        select terminal
+      </button>
+    ) : null
+  ),
+}))
+
 vi.mock('./components/settings', () => ({
   SettingsPanelContent: () => null,
 }))
@@ -42,7 +79,7 @@ vi.mock('./components/github-setup', () => ({
 }))
 
 vi.mock('./hooks', () => ({
-  useKeyboardShortcuts: vi.fn(),
+  useKeyboardShortcuts: useKeyboardShortcutsMock,
   TERMINAL_DISPOSE_DELAY: 100,
 }))
 
@@ -70,9 +107,9 @@ vi.mock('./api', () => ({
       detectWsl: vi.fn().mockResolvedValue({ available: false, distros: [] }),
     },
     project: {
-      list: vi.fn().mockResolvedValue([]),
-      checkFolder: vi.fn().mockResolvedValue(true),
-      delete: vi.fn().mockResolvedValue(true),
+      list: projectListMock,
+      checkFolder: checkFolderMock,
+      delete: deleteProjectMock,
       openFolder: vi.fn().mockResolvedValue(''),
       create: vi.fn(),
       update: vi.fn(),
@@ -113,6 +150,10 @@ vi.mock('./api', () => ({
 
 describe('App', () => {
   beforeEach(() => {
+    useKeyboardShortcutsMock.mockClear()
+    checkFolderMock.mockResolvedValue(true)
+    deleteProjectMock.mockResolvedValue(true)
+    projectListMock.mockResolvedValue([])
     useAppStore.setState({
       terminals: [],
       terminalOutputs: {},
@@ -133,7 +174,6 @@ describe('App', () => {
       hasUnsavedChanges: false,
       wslInfo: null,
       gitPanelOpen: false,
-      settingsModalOpen: false,
     })
 
     useToastStore.setState({ toasts: [] })
@@ -157,5 +197,46 @@ describe('App', () => {
     expect(await screen.findByTestId(TEST_IDS.shell.terminalArea)).toBeInTheDocument()
     expect(screen.getByTestId('terminal-grid-stub')).toBeInTheDocument()
     expect(screen.queryByTestId('welcome-screen-stub')).not.toBeInTheDocument()
+  })
+
+  test('removes a missing project when its terminal is selected from the quick switcher', async () => {
+    checkFolderMock.mockResolvedValue(false)
+    projectListMock.mockImplementation(() => new Promise(() => {}))
+
+    useAppStore.setState({
+      terminals: [{
+        id: 'terminal-1',
+        title: 'Repo Terminal',
+        cwd: '/tmp/missing',
+        projectId: 'project-missing',
+        isClaudeMode: false,
+        createdAt: '2026-04-10T00:00:00.000Z',
+      }],
+      activeTerminalId: 'terminal-1',
+      projects: [{
+        id: 'project-missing',
+        name: 'Missing Repo',
+        path: '/tmp/missing',
+        createdAt: '2026-04-10T00:00:00.000Z',
+        updatedAt: '2026-04-10T00:00:00.000Z',
+      }],
+      activeProjectId: 'project-missing',
+    })
+
+    render(<App />)
+
+    const keyboardOptions = useKeyboardShortcutsMock.mock.calls.at(-1)?.[0]
+    await act(async () => {
+      keyboardOptions?.onToggleQuickSwitcher?.()
+    })
+
+    fireEvent.click(await screen.findByTestId('quick-switcher-terminal-select'))
+
+    await waitFor(() => {
+      expect(checkFolderMock).toHaveBeenCalledWith('/tmp/missing')
+      expect(deleteProjectMock).toHaveBeenCalledWith('project-missing')
+      expect(useAppStore.getState().projects).toEqual([])
+      expect(useToastStore.getState().toasts.at(-1)?.message).toContain('Missing Repo')
+    })
   })
 })

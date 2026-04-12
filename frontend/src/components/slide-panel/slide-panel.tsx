@@ -45,19 +45,24 @@ export function SlidePanel({
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose])
 
-  const dirClass = isPortrait ? 'slide-panel-bottom' : 'slide-panel-right'
+  const panelSide = isPortrait ? 'bottom' : 'right'
+  const dirClass = `slide-panel-${panelSide}`
   const openClass = isOpen ? 'slide-panel-open' : ''
 
   return (
     <div
-      className={`slide-panel slide-panel-${variant} ${dirClass} ${openClass}`}
+      className={`slide-panel slide-panel-${variant} ${dirClass} ${openClass} slide-panel-attached`}
       // visibility:hidden preserves child state (data, form state) when closed
       style={{ visibility: isOpen ? 'visible' : 'hidden' }}
       data-testid={testId}
       data-panel-variant={variant}
+      data-panel-side={panelSide}
+      data-panel-state={isOpen ? 'open' : 'closed'}
+      data-panel-attached="true"
       role="dialog"
       aria-modal="false"
       aria-label={title}
+      aria-hidden={!isOpen}
     >
       <div className="slide-panel-header">
         <div className="slide-panel-heading">
@@ -65,7 +70,7 @@ export function SlidePanel({
           {description && <span className="slide-panel-description">{description}</span>}
         </div>
         {headerExtra && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <div className="slide-panel-header-extra">
             {headerExtra}
           </div>
         )}
@@ -73,6 +78,7 @@ export function SlidePanel({
           type="button"
           className="slide-panel-close"
           onClick={onClose}
+          aria-label={`Close ${title} panel`}
           title="Close (Esc)"
           data-testid={closeTestId}
         >
