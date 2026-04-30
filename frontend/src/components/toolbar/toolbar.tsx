@@ -2,7 +2,7 @@ import { api } from '../../api'
 import { useEffect, useState } from 'react'
 import { TEST_IDS } from '@shared/constants'
 import { ToolbarButton } from './toolbar-button'
-import { ProjectDropdown } from './project-dropdown'
+import { TopShellProjectTabStrip } from './top-shell-project-tab-strip'
 import logoImg from '../../assets/logo.png'
 import type { WindowState } from '@shared/types'
 import type { Project } from '@shared/types'
@@ -68,32 +68,42 @@ export function Toolbar({
   const activeProject = projects.find((project) => project.id === activeProjectId) ?? null
 
   useEffect(() => {
-    if (!isMac) return
-
     let isSubscribed = true
-
-    api.window.getState()
-      .then((state) => {
-        if (isSubscribed) {
-          setWindowState(state)
-        }
-      })
-      .catch(() => {})
-
-    const unsubscribe = api.window.onStateChanged((state) => {
-      if (isSubscribed) {
-        setWindowState(state)
+    const syncWindowState = () => {
+      api.window.getState()
+        .then((state) => {
+          if (isSubscribed) {
+            setWindowState(state)
+          }
+        })
+        .catch(() => {})
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncWindowState()
       }
-    })
+    }
+
+    syncWindowState()
+    window.addEventListener('resize', syncWindowState)
+    window.addEventListener('focus', syncWindowState)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       isSubscribed = false
-      unsubscribe()
+      window.removeEventListener('resize', syncWindowState)
+      window.removeEventListener('focus', syncWindowState)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
   return (
-    <header className="toolbar" data-testid={TEST_IDS.shell.toolbar}>
+    <header
+      className="toolbar"
+      data-testid={TEST_IDS.shell.toolbar}
+      data-window-chrome="immersive"
+      data-shell-hierarchy="session-strip"
+    >
       {/* Drag region sits behind interactive elements */}
       <div className="toolbar-drag" />
 
@@ -104,34 +114,24 @@ export function Toolbar({
       >
         <div className="toolbar-brand">
           <img src={logoImg} alt="MultiHub" className="toolbar-brand-logo" />
-          <span className="toolbar-brand-name">MultiHub</span>
+          <div className="toolbar-brand-copy">
+            <span className="toolbar-brand-name">MultiHub</span>
+            <span className="toolbar-shell-badge">Workspace Shell</span>
+          </div>
         </div>
       </div>
 
       <div className="toolbar-group toolbar-group-center">
-        <div className="toolbar-project-controls">
-          <ProjectDropdown
-            projects={projects}
-            activeProjectId={activeProjectId}
-            activeProjectPath={activeProjectPath}
-            onSelectProject={onSelectProject}
-            onAddProject={onAddProject}
-            onDeleteProject={onDeleteProject}
-          />
-          <button
-            type="button"
-            className="toolbar-add-project"
-            data-testid={TEST_IDS.shell.addProjectButton}
-            onClick={onAddProject}
-          >
-            Open Project
-          </button>
-        </div>
+        <TopShellProjectTabStrip
+          projects={projects}
+          activeProjectId={activeProjectId}
+          onSelectProject={onSelectProject}
+          onAddProject={onAddProject}
+          onDeleteProject={onDeleteProject}
+        />
 
         <div className="toolbar-context-card">
-          <span className="toolbar-context-label">
-            {activeProject ? 'Active Project' : 'Workbench'}
-          </span>
+          <span className="toolbar-context-label">Session</span>
           <span className="toolbar-context-value" title={activeProjectPath}>
             {activeProject
               ? activeProjectPath ?? activeProject.path

@@ -44,11 +44,85 @@ function App() {
   const [pendingSetupProject, setPendingSetupProject] = useState<Project | null>(null)
 
   const projectSelectionRequestRef = useRef(0)
+  const latestRequestedProjectIdRef = useRef<string | null>(null)
   const activeProject = projects.find(p => p.id === activeProjectId)
   const showTerminalWorkspace = Boolean(activeProjectId || terminals.length > 0)
   const visibleTerminals = activeProjectId
     ? terminals.filter(t => t.projectId === activeProjectId)
     : terminals
+
+  const handleDeleteProject = useCallback(async (id: string) => {
+    if (latestRequestedProjectIdRef.current === id || activeProjectId === id) {
+      projectSelectionRequestRef.current += 1
+      latestRequestedProjectIdRef.current = null
+    }
+
+    const projectTerminals = terminals.filter(t => t.projectId === id)
+    for (const terminal of projectTerminals) {
+      await api.terminal.destroy(terminal.id)
+      removeTerminal(terminal.id)
+    }
+    await api.project.delete(id)
+    removeProject(id)
+  }, [activeProjectId, terminals, removeProject, removeTerminal])
+
+  const persistActiveProjectSelection = useCallback(async (
+    id: string | null,
+    requestId: number,
+  ) => {
+    const persistedId = id ?? ''
+    await api.project.setActive(persistedId)
+
+    if (requestId !== projectSelectionRequestRef.current) {
+      const repairedId = latestRequestedProjectIdRef.current ?? ''
+      if (repairedId !== persistedId) {
+        await api.project.setActive(repairedId)
+      }
+      return false
+    }
+
+    return true
+  }, [])
+
+  const handleSelectProject = useCallback(async (
+    id: string | null,
+    terminalId?: string,
+    candidateProjects?: Project[],
+    options?: { skipValidation?: boolean },
+  ) => {
+    const requestId = ++projectSelectionRequestRef.current
+    latestRequestedProjectIdRef.current = id
+
+    if (!id) {
+      const persisted = await persistActiveProjectSelection(null, requestId)
+      if (!persisted) return
+      setActiveProject(null)
+      setActiveTerminal(terminalId ?? null)
+      return
+    }
+
+    const project = (candidateProjects ?? projects).find((candidate) => candidate.id === id)
+    if (!project) return
+
+    if (!options?.skipValidation) {
+      const exists = await api.project.checkFolder(project.path)
+      if (requestId !== projectSelectionRequestRef.current) return
+      if (!exists) {
+        useToastStore.getState().addToast(
+          `Project "${project.name}" folder no longer exists. Removing from list.`, 'warning'
+        )
+        await api.project.delete(id)
+        removeProject(id)
+
+        await persistActiveProjectSelection(null, requestId)
+        return
+      }
+    }
+
+    const persisted = await persistActiveProjectSelection(id, requestId)
+    if (!persisted) return
+    switchToProject(id, terminalId)
+  }, [persistActiveProjectSelection, projects, switchToProject, removeProject, setActiveProject, setActiveTerminal])
 
   const handleAddProject = useCallback(async () => {
     const path = await api.project.openFolder()
@@ -56,7 +130,7 @@ function App() {
     const name = path.split(/[/\\]/).pop() || 'Untitled'
     const project = await api.project.create({ name, path })
     addProject(project)
-    setActiveProject(project.id)
+    await handleSelectProject(project.id, undefined, [...projects, project], { skipValidation: true })
     if (project.skipGitSetup) return
     const gitStatus = await api.git.status(path)
     if (!gitStatus?.isRepo) {
@@ -66,39 +140,7 @@ function App() {
       setPendingSetupProject(project)
       setGithubConnectDialogOpen(true)
     }
-  }, [addProject, setActiveProject])
-
-  const handleDeleteProject = useCallback(async (id: string) => {
-    const projectTerminals = terminals.filter(t => t.projectId === id)
-    for (const terminal of projectTerminals) {
-      await api.terminal.destroy(terminal.id)
-      removeTerminal(terminal.id)
-    }
-    await api.project.delete(id)
-    removeProject(id)
-  }, [terminals, removeProject, removeTerminal])
-
-  const handleSelectProject = useCallback(async (id: string | null, terminalId?: string) => {
-    const requestId = ++projectSelectionRequestRef.current
-    if (!id) {
-      setActiveProject(null)
-      setActiveTerminal(terminalId ?? null)
-      return
-    }
-    const project = projects.find(p => p.id === id)
-    if (!project) return
-    const exists = await api.project.checkFolder(project.path)
-    if (requestId !== projectSelectionRequestRef.current) return
-    if (!exists) {
-      useToastStore.getState().addToast(
-        `Project "${project.name}" folder no longer exists. Removing from list.`, 'warning'
-      )
-      await api.project.delete(id)
-      removeProject(id)
-      return
-    }
-    switchToProject(id, terminalId)
-  }, [projects, switchToProject, removeProject, setActiveProject, setActiveTerminal])
+  }, [addProject, handleSelectProject, projects])
 
   const handleCloseSettingsPanel = useCallback(() => {
     cancelSettings()
@@ -301,8 +343,7 @@ function App() {
         return
       }
 
-      setActiveProject(null)
-      setActiveTerminal(terminal.id)
+      void handleSelectProject(null, terminal.id)
       return
     }
 
@@ -363,7 +404,10 @@ function App() {
 
   useEffect(() => {
     const init = async () => {
-      const loadedProjects = await api.project.list()
+      const [loadedProjects, persistedActiveProjectId] = await Promise.all([
+        api.project.list(),
+        api.project.getActive(),
+      ])
       const validationResults = await Promise.all(
         loadedProjects.map(async (project) => ({ project, exists: await api.project.checkFolder(project.path) }))
       )
@@ -377,8 +421,26 @@ function App() {
         )
       }
       setProjects(validProjects)
+
+      if (!persistedActiveProjectId) {
+        return
+      }
+
+      const persistedProject = validProjects.find((project) => project.id === persistedActiveProjectId)
+      if (persistedProject) {
+        await handleSelectProject(
+          persistedProject.id,
+          undefined,
+          validProjects,
+          { skipValidation: true },
+        )
+        return
+      }
+
+      await api.project.setActive('')
+      setActiveProject(null)
     }
-    init()
+    void init()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

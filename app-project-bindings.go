@@ -42,9 +42,21 @@ func (a *App) ProjectSetActive(id string) bool {
 	return a.projectStore.SetActive(id) == nil
 }
 
+// ProjectGetActive returns the persisted active project ID.
+func (a *App) ProjectGetActive() string {
+	if a.projectStore == nil {
+		return ""
+	}
+	return a.projectStore.GetActive()
+}
+
 // ProjectCheckFolder checks whether the given path is a valid project folder.
-func (a *App) ProjectCheckFolder(cwd string) (project.FolderStatus, error) {
-	return project.CheckFolder(cwd)
+func (a *App) ProjectCheckFolder(cwd string) (bool, error) {
+	status, err := project.CheckFolder(cwd)
+	if err != nil {
+		return false, err
+	}
+	return status.Exists, nil
 }
 
 // ProjectOpenFolder opens a native directory picker and returns the chosen path.

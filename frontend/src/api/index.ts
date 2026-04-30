@@ -112,6 +112,9 @@ export const api = {
     delete: (id: string): Promise<boolean> =>
       App.ProjectDelete(id),
 
+    getActive: (): Promise<string> =>
+      App.ProjectGetActive(),
+
     setActive: (id: string): Promise<boolean> =>
       App.ProjectSetActive(id),
 
@@ -298,11 +301,6 @@ export const api = {
 
     getState: (): Promise<WindowState> =>
       App.WindowGetState() as Promise<WindowState>,
-
-    onStateChanged: (cb: (state: WindowState) => void): (() => void) => {
-      EventsOn('window:state-changed', cb)
-      return () => EventsOff('window:state-changed')
-    },
   },
 
   // ── App ────────────────────────────────────────────────────────────────────

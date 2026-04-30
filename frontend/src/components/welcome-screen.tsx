@@ -15,10 +15,10 @@ export function WelcomeScreen({ onAddProject }: WelcomeScreenProps) {
       <span className="welcome-eyebrow">Desktop Workbench</span>
       <h1 className="welcome-title">MultiHub</h1>
       <p className="welcome-subtitle">
-        Run parallel terminals, Git workflows, and GitHub context from one native workspace.
+        Project-scoped terminals, Git workflows, and GitHub context in one native shell.
       </p>
       <p className="welcome-hint">
-        Open a project folder to create a focused workbench for the repo you are actively shipping.
+        Open a project folder to pin the active session strip around the repo you are shipping now.
       </p>
       <button type="button" onClick={onAddProject} className="welcome-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

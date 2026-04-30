@@ -1,20 +1,22 @@
 # MultiHub Codebase Summary
 
-**Last Updated:** 2026-04-12 (Shell-First UI Refresh)
+**Last Updated:** 2026-04-12 (Active Project Persistence + Project Tabs)
 
-**Note:** Legacy phase labels below are kept for provenance. The summary reflects the current repo state after the shell-first refactor.
+**Note:** Legacy phase labels below are kept for provenance. The summary reflects the current repo state after the shell-first refactor and the active-project slice.
 
 ## Directory Structure
 
 ```
 /Users/plateau/Project/MultiHub/
 ├── main.go                          # Wails app entry point
-├── app.go                           # App struct + 60+ IPC binding stubs
+├── app.go                           # App struct + lifecycle wiring
+├── app-*-bindings.go                # Split IPC bindings by domain
+├── window-config.go                 # Window chrome state bridge
 ├── go.mod / go.sum                  # Go dependencies (Wails, creack/pty, etc.)
 ├── wails.json                       # Wails framework config
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx                  # Root React component (multi-tab)
+│   │   ├── App.tsx                  # Root React component (multi-tab + active-project hydration)
 │   │   ├── api/
 │   │   │   ├── index.ts            # API adapter (maps Wails → ElectronAPI shape)
 │   │   │   └── events.ts           # Event subscription helpers
@@ -58,8 +60,9 @@
 │   │   │   ├── quick-switcher/             # Cmd/Ctrl+K palette
 │   │   │   │   ├── quick-switcher-dialog.tsx
 │   │   │   │   └── quick-switcher-dialog.test.tsx
-│   │   │   ├── toolbar/                    # Top bar controls
-│   │   │   │   ├── project-dropdown.tsx
+│   │   │   ├── toolbar/                    # Top bar controls + project tabs
+│   │   │   │   ├── top-shell-project-tab-strip.tsx # Real project tabs + overflow fallback
+│   │   │   │   ├── project-dropdown.tsx            # Overflow / quick-jump fallback
 │   │   │   │   ├── window-controls.tsx
 │   │   │   │   └── ...
 │   │   │   ├── slide-panel/
@@ -94,13 +97,13 @@
 │   │   ├── agent_detection.go      # Claude/Codex/Gemini detection
 │   │   ├── osc_parser.go           # Terminal title extraction
 │   │   └── shell_resolver.go       # Platform shell detection
-│   ├── git/                        # Stub (not yet implemented)
-│   ├── github/                     # Stub (not yet implemented)
-│   ├── project/                    # Stub (not yet implemented)
-│   ├── notification/               # Stub (not yet implemented)
-│   ├── settings/                   # Stub (not yet implemented)
+│   ├── git/                        # Git manager (go-git + exec fallback)
+│   ├── github/                     # GitHub client
+│   ├── project/                    # Project + session persistence store
+│   ├── notification/               # Notification manager
+│   ├── settings/                   # Settings store
 │   ├── platform/                   # OS-specific helpers (future)
-│   └── updater/                    # Stub (not yet implemented)
+│   └── updater/                    # Auto-update checker
 ├── pkg/types/                       # Shared Go types
 ├── docs/
 │   ├── project-overview-pdr.md     # Project overview + roadmap
@@ -142,7 +145,7 @@
 4. **Components (`frontend/src/components/`)**
    - React components using hooks + stores
    - Terminal pane uses xterm.js v5 + FitAddon
-   - Shell, drawer, and palette surfaces were refactored in the shell-first pass; the rest of the app still follows the MultiClaude-derived structure
+   - Shell, drawer, palette, and project-tab surfaces were refactored in the shell-first pass; the rest of the app still follows the MultiClaude-derived structure
 
 5. **Shared Types (`frontend/src/shared/`)**
    - Copied from MultiClaude source
@@ -161,21 +164,14 @@
 - **@xterm/addon-webgl 0.16.0** — GPU rendering (optional)
 - **Font packages:** Roboto, JetBrains Mono, Noto Sans CJK
 
-## Backend Structure (Phases 01-03 + Phase 04 Stubs)
+## Backend Structure (Phases 01-04 + split bindings)
 
 ### Go Modules
 
-1. **`app.go`**
-   - App struct (owned by Wails runtime)
-   - 60+ stub methods grouped by domain:
-     - Terminal (11 methods) — implemented, working
-     - Project (7 methods) — stubs, ready for Phase 05
-     - Git (26 methods) — stubs, ready for Phase 06
-     - GitHub (6 methods) — stubs, ready for Phase 09
-     - Notification (14 methods) — stubs, ready for Phase 07
-     - Settings (3 methods) — stubs, ready for Phase 08
-     - Update (4 methods) — stubs, ready for Phase 10
-     - Window/App/Misc (10 methods) — stubs + Wails runtime calls
+1. **`app.go` + `app-*-bindings.go`**
+   - App struct (owned by Wails runtime) and startup/shutdown wiring
+   - Split bindings by domain: project, git, notification, misc, and terminal helpers
+   - Project bindings persist `projects.json` and `activeProjectId`; other bindings are real wrappers over backend managers or helper functions
 
 2. **`internal/terminal/`**
    - **manager.go** — PTY lifecycle, ghost cache (50 entries, 30min TTL), suspend/resume
@@ -184,17 +180,21 @@
    - **osc_parser.go** — OSC 0/1/2 escape sequence title extraction
    - **shell_resolver.go** — Platform shell detection (dscl/SHELL/bash)
 
-3. **`internal/git/`, `internal/github/`, `internal/project/`, `internal/notification/`, `internal/settings/`, `internal/updater/`**
-   - Stub packages, not yet implemented
-   - Bindings exist in `app.go` for frontend compatibility
+3. **`internal/project/`**
+   - JSON-backed project store with atomic writes to `projects.json`
+   - Persists project list, `activeProjectId`, and session snapshots
+   - Folder validation and active-project hydration support for App startup
+
+4. **`internal/git/`, `internal/github/`, `internal/notification/`, `internal/settings/`, `internal/updater/`**
+   - Domain managers and stores backing the split App bindings
 
 ### Go Dependencies
 
 - **Wails v2.12.0** — Framework + event emission
 - **creack/pty v1.1.24** — PTY operations (Unix)
 - **google/uuid** — Terminal ID generation
-- **go-git v6** — Git operations (future phases)
-- **github.com/cli** — GitHub CLI API (future phases)
+- **go-git v6** — Git operations with exec fallback
+- **gh CLI binary** — GitHub integration via the external GitHub CLI
 
 ## Build & Development
 
@@ -223,22 +223,26 @@ npm run build && go build .  # Full build process
 - `shell.css` owns the shell frame, toolbar density, and shared chrome tokens.
 - `workspace.css` owns the terminal workspace density, hidden-project retention, and pane chrome.
 - `panels.css` owns the attached drawer shells and quick switcher palette surfaces.
+- `toolbar.tsx` consumes the macOS window-state bridge so the left session strip avoids the traffic-light area until the window is expanded.
 - `frontend/src/components/quick-switcher/` provides the `Cmd/Ctrl+K` palette for projects, terminals, drawers, and shell actions.
-- Verified: Vitest 57/57, frontend build pass, Playwright shell smoke 8/8 against `wails dev`.
+- The palette copy now reads `Workspace Omnibox` to match the refreshed shell hierarchy.
+- Active-project hydration now runs on startup via `api.project.getActive()`, and the shared project-selection path keeps tab clicks, omnibox selection, and add-project completion in sync.
+- `top-shell-project-tab-strip.tsx` is the primary project navigation; `project-dropdown.tsx` is the compact overflow fallback.
+- Verified: `go test ./...`, Vitest 63/63, and frontend build pass. Targeted Playwright smoke passed for `projects`, `palette`, and `settings` against a live `wails dev` session.
 
 ## Compile Status
 
 - **Go:** ✅ Clean build, no errors
 - **TypeScript:** ✅ Zero errors in `npm run build`
-- **Bindings:** ✅ 60+ methods compile cleanly (stubs)
-- **Frontend:** ✅ Shell-first workspace, drawers, and palette compile cleanly with no `window.electron` references
+- **Bindings:** ✅ 60+ methods compile cleanly (split Go bindings)
+- **Frontend:** ✅ Shell-first workspace, project tabs, drawers, and palette compile cleanly with no `window.electron` references
 - **API Adapter:** ✅ Full Electron API surface area covered
 
 ## Codebase Versioning
 
 - **Codebase Version:** 1.0.0
 - **Last Update:** 2026-04-12
-- **Status:** Phase 11 Complete, Shell-First UI Refresh Included
+- **Status:** Phase 11 Complete, Shell-First UI Refresh + Project Slice Included
 
 ## Migration Notes (Phase 04)
 
@@ -274,6 +278,6 @@ npm run build && go build .  # Full build process
 | Terminal UI | `frontend/src/components/terminal/*` | Frontend | Complete (Phase 04) |
 | API Adapter | `frontend/src/api/*` | Frontend | Complete (Phase 04) |
 | Zustand Stores | `frontend/src/stores/*` | Frontend | Complete (Phase 04) |
-| Git Backend | `internal/git/*` | Backend | Stub (Phase 06) |
-| Settings Backend | `internal/settings/*` | Backend | Stub (Phase 08) |
-| Project Backend | `internal/project/*` | Backend | Stub (Phase 05) |
+| Git Backend | `internal/git/*` | Backend | Implemented |
+| Settings Backend | `internal/settings/*` | Backend | Implemented |
+| Project Backend | `internal/project/*` | Backend | Implemented (active-project persistence) |

@@ -111,8 +111,15 @@ func (a *App) TerminalDetectWsl() (interface{}, error) {
 // ── Window state ──────────────────────────────────────────────────────────────
 
 // WindowGetState returns whether the window is maximized / full-screen.
-func (a *App) WindowGetState() (interface{}, error) {
-	return map[string]interface{}{"isMaximized": false, "isFullScreen": false}, nil
+func (a *App) WindowGetState() (types.WindowState, error) {
+	if a.ctx == nil {
+		return buildWindowState(false, false), nil
+	}
+
+	return buildWindowState(
+		wailsRuntime.WindowIsMaximised(a.ctx),
+		wailsRuntime.WindowIsFullscreen(a.ctx),
+	), nil
 }
 
 // ── App bindings ──────────────────────────────────────────────────────────────

@@ -55,7 +55,15 @@ describe('QuickSwitcherDialog', () => {
     )
 
     expect(screen.getByTestId(TEST_IDS.palette.root)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Workspace omnibox' })).toBeInTheDocument()
+    expect(screen.getByText('Workspace Omnibox')).toBeInTheDocument()
+    expect(screen.getByText('Projects, terminals, drawers, and shell actions only.')).toBeInTheDocument()
     expect(screen.getByTestId(TEST_IDS.palette.input)).toHaveFocus()
+    expect(screen.getByTestId(TEST_IDS.palette.input)).toHaveAttribute('role', 'combobox')
+    expect(screen.getByTestId(TEST_IDS.palette.input)).toHaveAttribute('aria-controls', TEST_IDS.palette.list)
+    expect(screen.getByTestId(TEST_IDS.palette.input)).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId(TEST_IDS.palette.input)).toHaveAttribute('aria-autocomplete', 'list')
+    expect(screen.getByTestId(TEST_IDS.palette.input)).toHaveAttribute('aria-label', 'Search workspace omnibox')
 
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledTimes(1)
@@ -92,6 +100,7 @@ describe('QuickSwitcherDialog', () => {
 
     expect(screen.getByTestId(getQuickSwitcherItemTestId('toggle-settings'))).toBeInTheDocument()
     expect(screen.queryByTestId(getQuickSwitcherItemTestId('project-alpha'))).not.toBeInTheDocument()
+    expect(input).toHaveAttribute('aria-activedescendant', getQuickSwitcherItemTestId('toggle-settings'))
 
     await user.keyboard('{Enter}')
 

@@ -133,6 +133,10 @@ export function QuickSwitcherDialog({
     return null
   }
 
+  const activeDescendant = filteredItems[activeIndex]
+    ? getQuickSwitcherItemTestId(filteredItems[activeIndex].id)
+    : undefined
+
   let runningIndex = -1
 
   return (
@@ -151,9 +155,15 @@ export function QuickSwitcherDialog({
         data-testid={TEST_IDS.palette.root}
         role="dialog"
         aria-modal="true"
-        aria-label="Quick switcher"
+        aria-label="Workspace omnibox"
       >
         <div className="quick-switcher-search">
+          <div className="quick-switcher-intro">
+            <span className="quick-switcher-kicker" id="workspace-omnibox-title">Workspace Omnibox</span>
+            <p className="quick-switcher-description" id="workspace-omnibox-description">
+              Projects, terminals, drawers, and shell actions only.
+            </p>
+          </div>
           <input
             ref={inputRef}
             value={query}
@@ -161,16 +171,24 @@ export function QuickSwitcherDialog({
             onKeyDown={handleKeyDown}
             className="quick-switcher-input"
             data-testid={TEST_IDS.palette.input}
+            role="combobox"
+            aria-label="Search workspace omnibox"
+            aria-describedby="workspace-omnibox-description"
+            aria-controls={TEST_IDS.palette.list}
+            aria-activedescendant={activeDescendant}
+            aria-expanded="true"
+            aria-autocomplete="list"
             placeholder="Jump to project, terminal, drawer, or action"
             spellCheck={false}
           />
         </div>
 
         <div
+          id={TEST_IDS.palette.list}
           className="quick-switcher-list"
           data-testid={TEST_IDS.palette.list}
           role="listbox"
-          aria-label="Quick switcher results"
+          aria-label="Workspace omnibox results"
         >
           {filteredGroups.length === 0 ? (
             <div
@@ -187,13 +205,15 @@ export function QuickSwitcherDialog({
                   {group.items.map((item) => {
                     runningIndex += 1
                     const itemIndex = runningIndex
+                    const itemDomId = getQuickSwitcherItemTestId(item.id)
 
                     return (
                       <button
                         key={item.id}
+                        id={itemDomId}
                         type="button"
                         className={`quick-switcher-item${itemIndex === activeIndex ? ' is-active' : ''}`}
-                        data-testid={getQuickSwitcherItemTestId(item.id)}
+                        data-testid={itemDomId}
                         onMouseEnter={() => setActiveIndex(itemIndex)}
                         onClick={() => handleSelectItem(item)}
                         aria-selected={itemIndex === activeIndex}

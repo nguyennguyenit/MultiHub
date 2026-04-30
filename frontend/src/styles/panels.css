@@ -3,17 +3,17 @@
   z-index: 20;
   display: flex;
   flex-direction: column;
-  top: 8px;
+  top: 0;
   right: 0;
-  bottom: 8px;
+  bottom: 0;
   width: var(--panel-width);
-  border-radius: 24px 0 0 24px;
+  border-radius: 20px 0 0 20px;
   border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 42%, transparent), color-mix(in srgb, var(--bg-secondary) 94%, black 6%));
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 26%, transparent), color-mix(in srgb, var(--bg-secondary) 96%, black 4%));
   box-shadow:
-    -24px 0 48px rgba(0, 0, 0, 0.16),
-    0 24px 56px rgba(0, 0, 0, 0.24);
+    -18px 0 40px rgba(0, 0, 0, 0.12),
+    0 16px 40px rgba(0, 0, 0, 0.18);
   backdrop-filter: blur(20px);
   overflow: hidden;
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -165,24 +165,45 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 72px 16px 16px;
-  background: linear-gradient(180deg, rgba(8, 10, 18, 0.16), rgba(8, 10, 18, 0.08));
+  padding: 56px 16px 16px;
+  background: linear-gradient(180deg, rgba(8, 10, 18, 0.22), rgba(8, 10, 18, 0.1));
 }
 
 .quick-switcher-dialog {
-  width: min(640px, 100%);
-  border-radius: 20px;
+  width: min(700px, 100%);
+  border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 52%, transparent), color-mix(in srgb, var(--bg-secondary) 94%, black 6%));
-  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.32);
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 58%, transparent), color-mix(in srgb, var(--bg-secondary) 94%, black 4%));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(24px);
   overflow: hidden;
 }
 
 .quick-switcher-search {
-  padding: 14px 14px 10px;
+  padding: 14px 14px 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+.quick-switcher-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 2px 12px;
+}
+
+.quick-switcher-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quick-switcher-description {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 .quick-switcher-input {

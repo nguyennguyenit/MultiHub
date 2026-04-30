@@ -27,6 +27,7 @@ vi.stubGlobal('go', {
       ProjectCreate: vi.fn(),
       ProjectUpdate: vi.fn(),
       ProjectDelete: vi.fn().mockResolvedValue(true),
+      ProjectGetActive: vi.fn().mockResolvedValue(''),
       ProjectSetActive: vi.fn().mockResolvedValue(true),
       ProjectOpenFolder: vi.fn().mockResolvedValue(''),
       ProjectCheckFolder: vi.fn().mockResolvedValue(true),

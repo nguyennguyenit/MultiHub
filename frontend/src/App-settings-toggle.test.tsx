@@ -79,8 +79,10 @@ vi.mock('./api', () => ({
     },
     project: {
       list: vi.fn().mockResolvedValue([]),
+      getActive: vi.fn().mockResolvedValue(''),
       checkFolder: vi.fn().mockResolvedValue(true),
       delete: vi.fn().mockResolvedValue(true),
+      setActive: vi.fn().mockResolvedValue(true),
       openFolder: vi.fn().mockResolvedValue(''),
       create: vi.fn(),
       update: vi.fn(),

@@ -6,7 +6,6 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/mac"
 )
 
 //go:embed all:frontend/dist
@@ -36,10 +35,7 @@ func main() {
 			app,
 		},
 		// Enable WebKit inspector in dev mode
-		Mac: &mac.Options{
-			WebviewIsTransparent: false,
-			WindowIsTranslucent:  false,
-		},
+		Mac: buildMacOptions(),
 		Debug: options.Debug{
 			OpenInspectorOnStartup: true,
 		},

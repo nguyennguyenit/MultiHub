@@ -89,12 +89,18 @@ type App struct {
 - `TerminalFindByClaudeSession(sessionID)` → resolve terminal by Claude ID
 - `TerminalCount()` → active terminal count
 
+**Project Persistence Bindings:**
+- `ProjectList()` → returns the persisted project list from `internal/project/store.go`
+- `ProjectCreate(data)` / `ProjectUpdate(id, data)` / `ProjectDelete(id)` → mutate the JSON-backed project store
+- `ProjectSetActive(id)` / `ProjectGetActive()` → persist and hydrate `activeProjectId`
+- `ProjectCheckFolder(cwd)` / `ProjectOpenFolder()` → validate folders and open the native directory picker
+
 **Legacy PTY Bindings (Phase 02 compat):**
 - `PtyCreate(id, shell, cwd)` → maps to TerminalCreate by title
 - `PtyWrite/Resize/Destroy/LatencyTest/PtyActiveCount` → backward compatible
 
 **Lifecycle:**
-- `startup()`: Initializes `terminal.Manager` with Wails context
+- `startup()`: Initializes `terminal.Manager`, `project.Store`, `project.SessionStore`, `git.Manager`, `notification.Manager`, `settings.Store`, `GitHub` client, and updater checker
 - `shutdown()`: Calls `DestroyAll()` on all active PTY processes
 
 ### 3. Terminal Manager (Phase 03)
@@ -189,7 +195,7 @@ type PTYProcess struct {
 
 **File:** `frontend/src/App.tsx`
 
-React 19 frontend fully migrated from Electron IPC to Wails bindings. All components use typed Wails API adapter instead of `window.electron.*` calls.
+React 19 frontend fully migrated from Electron IPC to Wails bindings. All components use typed Wails API adapter instead of `window.electron.*` calls, and startup now hydrates the persisted active project before the shell settles.
 
 ```tsx
 export default function App() {
@@ -204,6 +210,7 @@ export default function App() {
 - Zustand stores: `frontend/src/stores/` (app, settings, notification, update, image, toast)
 - Shared types: `frontend/src/shared/` (types, constants from MultiClaude)
 - Event helpers: `frontend/src/api/events.ts` (typed event subscriptions)
+- Project navigation: the top shell uses real project tabs with a compact add-project affordance and overflow fallback, while `App.tsx` keeps `activeProjectId` in sync across tab clicks and omnibox selection
 - Path aliases: `@shared/*` configured in tsconfig.json and vite.config.ts
 
 ### 2. API Adapter Layer (Phase 04)
@@ -243,6 +250,8 @@ export const api = {
 - **Components:** All terminal, git-panel, github-setup, github-view, settings, toolbar, and quick-switcher components migrated
 - **Terminal Pane:** Uses xterm.js v5 with FitAddon, receives output via Wails events
 - **Shell Styling:** `shell.css` owns the shell chrome and density tokens, `workspace.css` owns terminal/workspace density, and `panels.css` owns the attached drawer and palette surfaces
+- **Window Chrome Contract:** the macOS window-state bridge returns `isMaximized`, `isFullScreen`, and `isExpanded`; the toolbar reads that state on macOS to keep the session strip clear of the native traffic-light area until the window is expanded
+- **Project Navigation:** `top-shell-project-tab-strip.tsx` renders the primary project tabs, while `project-dropdown.tsx` provides the compact overflow/quick-jump fallback
 
 **Dependencies (Phase 04):**
 - `zustand` v4.5+ → state management
@@ -271,6 +280,13 @@ export function GitStatus(cwd: string): Promise<any>
 **Manual Bindings Extended:** `frontend/wailsjs/go/main/App.d.ts` and `App.js` manually declare all ~60 methods with proper typing.
 
 **Models:** `frontend/wailsjs/models.ts` includes Project class and all shared types.
+
+### Project Navigation Flow
+
+- `App.tsx` loads `api.project.list()` and `api.project.getActive()` on startup, validates folders, prunes missing projects, and hydrates `activeProjectId` before the shell settles.
+- `handleAddProject()` persists the newly created project as active before optional Git/GitHub setup dialogs open.
+- `handleSelectProject()` is the single write path for toolbar tabs, the overflow dropdown, and omnibox project actions; it persists via `api.project.setActive()`.
+- `top-shell-project-tab-strip.tsx` is the primary navigation surface; `project-dropdown.tsx` is the overflow and quick-jump fallback.
 
 ## Data Flow Diagrams
 
@@ -382,25 +398,23 @@ All frontend-to-backend calls follow the pattern:
 3. Wails delivers event to all listeners
 4. Frontend handlers execute (e.g., store updates, UI redraws)
 
-### Stub Binding Implementation (Phase 04)
+### Split Binding Implementation
 
-All Go methods defined in `app.go` are stubs returning `void` or `interface{}`:
-- Terminal stubs: All compile cleanly, ready for implementation
-- Project/Git stubs: ~45 methods covering full API surface area
-- Settings/Notification stubs: Full interface exposed
-- Components adapted to use `try/catch` pattern for stub calls
+- The Go binding surface is split across `app-project-bindings.go`, `app-git-bindings.go`, `app-notification-bindings.go`, and `app-misc-bindings.go` instead of living entirely in `app.go`.
+- Project, Git, GitHub, Settings, Notification, Update, Window, App, and Session bindings are implemented as real Go methods; Clipboard and Image bindings remain placeholder helpers.
+- The generated Wails TypeScript stubs still act as the transport layer; the backend bindings now own persistence and shell-navigation behavior.
 
 ## Known Architectural Constraints
 
 1. **Single Wails context:** All PTY processes share one Wails app context for event emission
 2. **Blocking readLoop in goroutine:** Prevents main thread blocking; can spawn 100+ goroutines safely
 3. **Event flooding risk:** No backpressure on EventsEmit; very high output rates could overflow browser
-4. **No persistence:** All PTY state in-memory; lost on app restart
+4. **Terminal state remains in-memory:** PTY sessions are still lost on app restart, but project data and `activeProjectId` persist in JSON.
 5. **Platform-specific:** PTY implementation uses Unix APIs (`creack/pty`); Windows uses `winpty` (TBD)
 6. **Vietnamese IME features:** Stubbed out in frontend drop handlers (Electron-specific)
 
 ---
 
-**Document Version:** 1.2 (Phase 04 Update)  
-**Last Updated:** 2026-04-10  
-**Architecture Review:** Phases 01 + 02 + 03 + 04 complete
+**Document Version:** 1.3 (Project Slice Update)  
+**Last Updated:** 2026-04-12  
+**Architecture Review:** Phases 01 + 02 + 03 + 04 complete; project persistence and tab-strip slice added

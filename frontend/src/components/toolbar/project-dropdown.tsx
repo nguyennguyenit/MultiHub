@@ -9,6 +9,7 @@ interface ProjectDropdownProps {
   onSelectProject: (id: string | null) => void
   onAddProject: () => void
   onDeleteProject: (id: string) => void
+  variant?: 'default' | 'compact'
 }
 
 const MAX_SHORTCUT_PROJECTS = 9
@@ -20,12 +21,14 @@ export function ProjectDropdown({
   activeProjectPath,
   onSelectProject,
   onAddProject,
-  onDeleteProject
+  onDeleteProject,
+  variant = 'default',
 }: ProjectDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const activeProject = projects.find(p => p.id === activeProjectId)
+  const isCompact = variant === 'compact'
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -45,26 +48,36 @@ export function ProjectDropdown({
   }, [])
 
   return (
-    <div ref={dropdownRef} className="project-dropdown">
+    <div
+      ref={dropdownRef}
+      className={`project-dropdown${isCompact ? ' compact' : ''}`}
+    >
       <button
         type="button"
         data-testid={TEST_IDS.shell.projectSwitcherButton}
-        className="project-dropdown-trigger"
+        data-session-anchor={isCompact ? undefined : 'active-project'}
+        className={`project-dropdown-trigger${isCompact ? ' compact' : ''}`}
         onClick={() => setIsOpen(prev => !prev)}
-        title="Switch project (Alt+1-9)"
-        aria-haspopup="listbox"
+        title={isCompact ? 'Project overflow and quick jump' : 'Switch project session (Alt+1-9)'}
+        aria-label={isCompact ? 'Project overflow and quick jump' : undefined}
         aria-expanded={isOpen}
+        aria-controls={isOpen ? TEST_IDS.shell.projectSwitcherMenu : undefined}
       >
-        <span className="project-dropdown-copy">
-          <span className="project-dropdown-name">
-            {activeProject ? activeProject.name : 'Open Project Folder'}
+        {isCompact ? (
+          <span className="project-dropdown-compact-copy">All</span>
+        ) : (
+          <span className="project-dropdown-copy">
+            <span className="project-dropdown-label">Current Session</span>
+            <span className="project-dropdown-name">
+              {activeProject ? activeProject.name : 'Open Project Folder'}
+            </span>
+            <span className="project-dropdown-meta">
+              {activeProject
+                ? activeProjectPath ?? activeProject.path
+                : `${projects.length} saved ${projects.length === 1 ? 'project' : 'projects'}`}
+            </span>
           </span>
-          <span className="project-dropdown-meta">
-            {activeProject
-              ? activeProjectPath ?? activeProject.path
-              : `${projects.length} saved ${projects.length === 1 ? 'project' : 'projects'}`}
-          </span>
-        </span>
+        )}
         {/* Chevron icon */}
         <svg
           className="project-dropdown-chevron"
@@ -84,7 +97,7 @@ export function ProjectDropdown({
       {isOpen && (
         <div
           className="project-dropdown-menu"
-          role="listbox"
+          aria-label={isCompact ? 'Project overflow and quick jump' : 'Project sessions'}
           data-testid={TEST_IDS.shell.projectSwitcherMenu}
         >
           {projects.length === 0 && (
@@ -101,9 +114,8 @@ export function ProjectDropdown({
             >
               <button
                 type="button"
-                role="option"
-                aria-selected={activeProjectId === project.id}
                 className="project-dropdown-item-btn"
+                aria-label={`Switch to project ${project.name}`}
                 onClick={() => {
                   onSelectProject(project.id)
                   setIsOpen(false)

@@ -174,6 +174,16 @@ All 11 phases of the Electron-to-Go port are complete. MultiHub is now a single 
 - Removed proven-unused legacy shell code by deleting `frontend/src/components/toolbar/project-bar.tsx`, `frontend/src/components/settings/settings-modal.tsx`, and the orphaned project-bar CSS/export paths.
 - Verified: Vitest 57/57; frontend build pass; Playwright shell smoke 8/8 (`palette`, `terminal`, `projects`, `settings`) against `wails dev`.
 
+### 🪟 Shell Chrome Contract Polish
+- Wired the toolbar to the real window-state bridge so macOS padding expands only when the shell is not maximized or full-screen.
+- Renamed the quick switcher surface to `Workspace Omnibox` and aligned the session/project copy with the refreshed shell hierarchy.
+
+### 🧭 Active Project Persistence + Project Tab Strip Slice
+- Hydrated persisted active-project state on startup by reading `ProjectGetActive()` alongside `ProjectList()`, validating saved folders, and syncing `activeProjectId` before the shell renders.
+- Centralized active-project writes through the shared selection path so toolbar tab clicks, omnibox project actions, and add-project completion all persist via `ProjectSetActive()`.
+- Replaced dropdown-first shell navigation with real project tabs, a compact `+` add-project affordance, and overflow fallback for narrow widths.
+- Verified with focused `App` and toolbar regression coverage; broader shell-refresh work remains in progress.
+
 ### ⏭️ Known Limitations
 
 **Not Ported (v1.0 scope):**

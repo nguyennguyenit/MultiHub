@@ -34,13 +34,19 @@ describe('ProjectDropdown', () => {
       />
     )
 
+    expect(screen.getByText('Current Session')).toBeInTheDocument()
+    expect(screen.getByTestId(TEST_IDS.shell.projectSwitcherButton)).toHaveAttribute(
+      'title',
+      'Switch project session (Alt+1-9)',
+    )
+
     await user.click(screen.getByTestId(TEST_IDS.shell.projectSwitcherButton))
 
     const projectItem = screen.getByTestId(getProjectDropdownItemTestId('project-2'))
-    expect(within(projectItem).getByRole('option', { name: /beta/i })).toBeInTheDocument()
+    expect(within(projectItem).getByRole('button', { name: 'Switch to project Beta' })).toBeInTheDocument()
     expect(screen.getByTestId(TEST_IDS.shell.projectDropdownAddButton)).toBeInTheDocument()
 
-    await user.click(within(projectItem).getByRole('option', { name: /beta/i }))
+    await user.click(within(projectItem).getByRole('button', { name: 'Switch to project Beta' }))
 
     expect(onSelectProject).toHaveBeenCalledWith('project-2')
     expect(screen.queryByTestId(TEST_IDS.shell.projectSwitcherMenu)).not.toBeInTheDocument()

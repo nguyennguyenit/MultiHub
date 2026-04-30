@@ -32,7 +32,13 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 └─────────────────────────────┘
 ```
 
-## Current Implementation (Phases 01 + 02 + 03)
+## Implemented Shell Navigation Slice
+
+- `ProjectGetActive()` hydrates `activeProjectId` on startup after folder validation.
+- `ProjectSetActive()` is the shared write path for toolbar tabs, omnibox project selection, and add-project completion.
+- The top shell now uses real project tabs with a compact add-project affordance and overflow fallback; the dropdown is the fallback surface, not the primary nav.
+
+## Current Implementation (Phases 01 + 02 + 03 + 04 + shell navigation slice)
 
 ### Go Backend (Phase 03 Complete)
 - **Entry:** `main.go` → `app.go` (App struct)
@@ -60,7 +66,7 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 - **Dependencies:** React 19, TypeScript 5.9, Vite, Tailwind v4, Zustand, @xterm/*, font packages
 - **Build:** `npm run build` → static assets embedded in binary, zero TypeScript errors
 
-### IPC Bindings (App struct methods, Phase 04 Exposed)
+### IPC Bindings (App struct methods, current state)
 
 **Terminal Management:** ~11 methods
 - `TerminalCreate(opts)` → spawn with options (shell, cwd, projectId, title)
@@ -70,31 +76,31 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 - `TerminalInvokeClaude(id, sessionID)`, `TerminalFindByClaudeSession(sessionID)` → Claude integration
 - `TerminalCount()` → active terminal count
 
-**Project Management:** ~7 methods (stubs)
-- `ProjectList()`, `ProjectCreate(p)`, `ProjectUpdate(id, u)`, `ProjectDelete(id)`, `ProjectSetActive(id)`, `ProjectCheckFolder(cwd)`
+**Project Management:** ~8 methods
+- `ProjectList()`, `ProjectCreate(data)`, `ProjectUpdate(id, data)`, `ProjectDelete(id)`, `ProjectSetActive(id)`, `ProjectGetActive()`, `ProjectCheckFolder(cwd)`, `ProjectOpenFolder()`
 
-**Git Integration:** ~26 methods (stubs)
-- Status, init, add remote, push, pull, fetch, commit, stage/unstage, branch ops, stash, diff, log, config
+**Git Integration:** ~26 methods
+- Status, init, add remote, push, pull, fetch, commit, stage/unstage, branch ops, stash, diff, log, config, watch/unwatch
 
-**GitHub Integration:** ~6 methods (stubs)
+**GitHub Integration:** ~6 methods
 - `GitHubAuthStatus()`, `GitHubLogin()`, `GitHubLogout()`, `GitHubCreateRepo()`, `GitHubListIssues()`, `GitHubListPRs()`
 
-**Notification System:** ~14 methods (stubs)
+**Notification System:** ~14 methods
 - Settings, Telegram config/test, Discord config/test, remote control status
 
-**Settings:** ~3 methods (stubs)
+**Settings:** ~3 methods
 - `SettingsGet()`, `SettingsSet(s)`, `SettingsReset()`
 
-**Update System:** ~4 methods (stubs)
+**Update System:** ~4 methods
 - `UpdateGetState()`, `UpdateCheck()`, `UpdateDownload()`, `UpdateInstall()`
 
-**Window/App/Misc:** ~10 methods (stubs + some Wails runtime calls)
-- `WindowGetState()`, `AppGetPath(name)`, `ClipboardSaveImage(b64)`, `Image*()` methods
+**Window/App/Misc:** helper bindings and placeholders
+- `WindowGetState()`, `AppGetVersion()`, `AppGetPath(name)`, `AppOpenExternal(url)`, `SessionSave()`, `SessionRestore()`, `TerminalDetectWsl()`, `ClipboardSaveImage(b64)`, `Image*()` methods
 
 **Legacy PTY (Phase 02 compat):**
 - `PtyCreate/Write/Resize/Destroy/LatencyTest/PtyActiveCount` → backward compatible
 
-**Total:** ~60 stub bindings, all compile cleanly, ready for backend implementation in later phases
+**Total:** ~60 bindings, implemented or placeholder where the UI still needs them
 
 ## Non-Functional Requirements (Realized)
 
@@ -107,10 +113,9 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 
 ## Known Limitations & Tech Debt
 
-1. **Demo PTY only:** `App.tsx` hardcodes single "demo-pty-1" for testing
-2. **No persistence:** No project/workspace config saved between sessions
-3. **Minimal UI:** Tab-based layout, no tab creation/destruction UI yet
-4. **No Git integration:** `internal/git/` and `internal/github/` exist but unused
+1. **Terminal sessions remain in-memory:** PTY state resets on app restart
+2. **Shell refresh remains partial:** real project tabs and active-project hydration are in place, but the broader Warp-inspired shell pass is still in progress
+3. **Git panel E2E tests remain deferred:** the broader workflow is implemented, but dedicated end-to-end coverage is still planned for v1.1
 
 ## Directory Structure
 
@@ -122,13 +127,13 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 ├── wails.json                       # Wails config
 ├── internal/
 │   ├── terminal/                    # PTY engine (Manager, PTYProcess)
-│   ├── git/                         # Git integration (future)
-│   ├── github/                      # GitHub API client (future)
-│   ├── project/                     # Project management (future)
-│   ├── notification/                # Discord/Telegram/system (future)
-│   ├── settings/                    # Config store (future)
+│   ├── git/                         # Git manager (go-git + exec fallback)
+│   ├── github/                      # GitHub gh CLI client
+│   ├── project/                     # Project + session persistence store
+│   ├── notification/                # Notification manager
+│   ├── settings/                    # Settings store
 │   ├── platform/                    # OS-specific (Darwin/Linux/Windows)
-│   └── updater/                     # App update checker (future)
+│   └── updater/                     # Auto-update checker
 ├── pkg/types/                       # Shared types
 ├── frontend/
 │   ├── src/
@@ -164,8 +169,8 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 - ✅ Platform-aware shell resolution (dscl on macOS, $SHELL fallback)
 
 **Phase 04 (Frontend Migration):**
-- ✅ 60+ stub Go methods for Project, Git, GitHub, Settings, Notification, Update, Session, Window, App, Clipboard, Image bindings
-- ✅ All Go stub methods compile cleanly
+- ✅ 60+ Go bindings across Project, Git, GitHub, Settings, Notification, Update, Session, Window, App, Clipboard, and Image
+- ✅ All Go bindings compile cleanly
 - ✅ API adapter layer (`frontend/src/api/`) maps Wails bindings to ElectronAPI shape
 - ✅ All Zustand stores migrated to use api.* instead of window.electron.*
 - ✅ All components migrated (terminal, git-panel, github, settings, toolbar, etc.)
@@ -201,12 +206,10 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 **Phase 05 (Project Management)** depends on:
 - ✅ All infrastructure (Phases 01-04)
 - Frontend components for project CRUD
-- Project persistence (JSON file store)
 - Project-to-terminal association
 
 **Phase 06 (Git Integration)** depends on:
 - ✅ Project management (Phase 05)
-- Go git bindings (go-git v6)
 - Git status/commit/push/pull/branch operations
 - Frontend UI for git workflow
 
@@ -240,6 +243,6 @@ MultiHub is a native desktop terminal manager built with **Go 1.24 + Wails v2** 
 
 ---
 
-**Document Version:** 1.2 (Phase 04 Update)  
-**Last Updated:** 2026-04-10  
+**Document Version:** 1.3 (Shell Navigation Slice)  
+**Last Updated:** 2026-04-12  
 **Author:** Plateau Nguyen
